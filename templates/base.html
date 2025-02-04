@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            200: '#e9d5ff',
+                            300: '#d8b4fe',
+                            400: '#c084fc',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7e22ce',
+                            800: '#6b21a8',
+                            900: '#581c87'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="flex flex-col min-h-full bg-gray-50">
+    <nav class="bg-primary-800 text-white p-4">
+        <div class="container mx-auto">
+            <div class="flex justify-between items-center">
+                <a href="{{ url_for('index') }}" class="text-xl font-bold flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span class="hidden sm:inline">Investment Tracker</span>
+                </a>
+
+                <!-- Mobile menu button -->
+                <button id="mobile-menu-button" class="md:hidden flex items-center px-3 py-2 border rounded text-primary-200 border-primary-400 hover:text-white hover:border-white">
+                    <svg class="h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <title>Menu</title>
+                        <path fill="currentColor" d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z"/>
+                    </svg>
+                </button>
+
+                <!-- Desktop menu -->
+                <div class="hidden md:flex space-x-4">
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.is_admin %}
+                            <a href="{{ url_for('admin') }}" class="hover:text-primary-200 transition duration-150">Admin</a>
+                            <a href="{{ url_for('register') }}" class="hover:text-primary-200 transition duration-150">Create Client</a>
+                        {% endif %}
+                        <a href="{{ url_for('dashboard') }}" class="hover:text-primary-200 transition duration-150">Dashboard</a>
+                        <a href="{{ url_for('logout') }}" class="hover:text-primary-200 transition duration-150">Logout</a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="hover:text-primary-200 transition duration-150">Login</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Mobile menu -->
+            <div id="mobile-menu" class="hidden md:hidden mt-4">
+                {% if current_user.is_authenticated %}
+                    {% if current_user.is_admin %}
+                        <a href="{{ url_for('admin') }}" class="block py-2 hover:text-primary-200 transition duration-150">Admin</a>
+                        <a href="{{ url_for('register') }}" class="block py-2 hover:text-primary-200 transition duration-150">Create Client</a>
+                    {% endif %}
+                    <a href="{{ url_for('dashboard') }}" class="block py-2 hover:text-primary-200 transition duration-150">Dashboard</a>
+                    <a href="{{ url_for('logout') }}" class="block py-2 hover:text-primary-200 transition duration-150">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="block py-2 hover:text-primary-200 transition duration-150">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow">
+        <div class="container mx-auto mt-8 px-4 mb-16">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="bg-primary-100 border border-primary-300 text-primary-900 px-4 py-3 rounded relative mb-4" role="alert">
+                            <span class="block sm:inline">{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="bg-primary-800 text-white">
+        <div class="container mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">About</h3>
+                    <p class="text-primary-200 text-sm">
+                        Track your cryptocurrency investments with ease. Make informed decisions with real-time market data and portfolio analytics.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="{{ url_for('index') }}" class="text-primary-200 hover:text-white transition duration-150">Home</a></li>
+                        {% if current_user.is_authenticated %}
+                            <li><a href="{{ url_for('dashboard') }}" class="text-primary-200 hover:text-white transition duration-150">Dashboard</a></li>
+                        {% else %}
+                            <li><a href="{{ url_for('login') }}" class="text-primary-200 hover:text-white transition duration-150">Login</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Legal</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="{{ site_url }}/privacy" class="text-primary-200 hover:text-white transition duration-150">Privacy Policy</a></li>
+                        <li><a href="{{ site_url }}/terms" class="text-primary-200 hover:text-white transition duration-150">Terms of Service</a></li>
+                        <li><a href="{{ site_url }}/disclaimer" class="text-primary-200 hover:text-white transition duration-150">Disclaimer</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-8 pt-8 border-t border-primary-700 text-center text-sm text-primary-200">
+                <p>&copy; {{ current_year }} {{ company_name }}. All rights reserved.</p>
+                <p class="mt-2">
+                    <a href="{{ site_url }}" class="hover:text-white transition duration-150">{{ site_url }}</a>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html> 
