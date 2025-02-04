@@ -4,60 +4,36 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import os
-from dotenv import load_dotenv
 import requests
-
-# Load environment variables
-load_dotenv()
-
-# Validate required environment variables
-def validate_env_vars():
-    required_vars = {
-        'SECRET_KEY': 'A secret key for Flask sessions',
-        'DATABASE_URL': 'Database connection URL',
-        'SITE_URL': 'Website URL',
-        'COMPANY_NAME': 'Company name'
-    }
-    
-    missing_vars = []
-    for var, description in required_vars.items():
-        if not os.getenv(var):
-            missing_vars.append(f"{var} ({description})")
-    
-    if missing_vars:
-        raise EnvironmentError(
-            "Missing required environment variables:\n" + 
-            "\n".join(missing_vars) +
-            "\nPlease check your .env file."
-        )
-
-# Validate environment variables before starting the app
-validate_env_vars()
+import logging
+from logging.handlers import RotatingFileHandler
 
 # Flask app configuration
 app = Flask(__name__)
+
+# Basic configuration
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Configure MySQL if in production
-if os.getenv('FLASK_ENV') == 'production':
-    import pymysql
-    pymysql.install_as_MySQLdb()
-    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        "pool_pre_ping": True,
-        "pool_recycle": 300,
-    }
-    app.config['SESSION_COOKIE_SECURE'] = True
-    app.config['SESSION_COOKIE_HTTPONLY'] = True
-    app.config['REMEMBER_COOKIE_SECURE'] = True
-    app.config['REMEMBER_COOKIE_HTTPONLY'] = True
-    app.config['PREFERRED_URL_SCHEME'] = 'https'
-else:
-    # Development configuration
-    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        "pool_pre_ping": True,
-    }
+# Database configuration
+DB_USER = os.getenv('MYSQL_USER', 'root')
+DB_PASS = os.getenv('MYSQL_PASSWORD', '')
+DB_HOST = os.getenv('MYSQL_HOST', 'localhost')
+DB_NAME = os.getenv('MYSQL_DATABASE', 'crypto_portfolio')
+
+# Construct database URL
+app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
+
+# Production settings
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_pre_ping": True,
+    "pool_recycle": 300,
+}
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['REMEMBER_COOKIE_SECURE'] = True
+app.config['REMEMBER_COOKIE_HTTPONLY'] = True
+app.config['PREFERRED_URL_SCHEME'] = 'https'
 
 # Initialize extensions
 db = SQLAlchemy(app)
@@ -65,8 +41,25 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
 # Site configuration from environment variables
-SITE_URL = os.getenv('SITE_URL').rstrip('/')  # Remove trailing slash if present
-COMPANY_NAME = os.getenv('COMPANY_NAME')
+SITE_URL = os.getenv('SITE_URL', 'http://localhost:5000').rstrip('/')
+COMPANY_NAME = os.getenv('COMPANY_NAME', 'Investment Tracker')
+
+# Set up logging
+if not os.path.exists('logs'):
+    os.mkdir('logs')
+file_handler = RotatingFileHandler('logs/app.log', maxBytes=10240, backupCount=10)
+file_handler.setFormatter(logging.Formatter(
+    '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+))
+file_handler.setLevel(logging.INFO)
+app.logger.addHandler(file_handler)
+app.logger.setLevel(logging.INFO)
+app.logger.info('Application startup')
+
+# Log configuration (excluding sensitive data)
+app.logger.info(f"SITE_URL: {SITE_URL}")
+app.logger.info(f"DB_HOST: {DB_HOST}")
+app.logger.info(f"DB_NAME: {DB_NAME}")
 
 # Add context processor for footer variables
 @app.context_processor
@@ -182,14 +175,16 @@ def init_cryptocurrencies():
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Error handlers
+# Update the error handler
 @app.errorhandler(500)
 def internal_error(error):
     db.session.rollback()
+    app.logger.error('Server Error: %s', str(error), exc_info=True)
     return render_template('error.html', error=error), 500
 
 @app.errorhandler(404)
 def not_found_error(error):
+    app.logger.error('Not Found: %s', str(error))
     return render_template('error.html', error=error), 404
 
 # Routes
@@ -515,15 +510,17 @@ def get_prices():
         print(f"Error fetching prices: {str(e)}")
         return jsonify({'success': False, 'message': 'Error fetching prices'}), 500
 
-# Move this to the bottom of the file
+# Add this at the bottom of the file
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()
-        init_cryptocurrencies()  # Initialize cryptocurrencies table
+        try:
+            db.create_all()
+            init_cryptocurrencies()
+            app.logger.info('Database initialized successfully')
+        except Exception as e:
+            app.logger.error('Error initializing database: %s', str(e), exc_info=True)
     
-    # In development, you can use debug mode
     if os.getenv('FLASK_ENV') == 'development':
         app.run(debug=True)
     else:
-        # In production, no debug mode
         app.run(host='127.0.0.1', port=8000) 

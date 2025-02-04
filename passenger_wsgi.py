@@ -1,19 +1,29 @@
 import os
 import sys
+import logging
 
-# Add the application directory to the Python path
-VENV_PATH = os.path.join(os.getcwd(), 'venv')
-PYTHON_VERSION = '3.9'  # Change this to match your Python version
-INTERP = os.path.join(VENV_PATH, 'bin', 'python')
+# Set up logging
+logging.basicConfig(
+    filename='app_error.log',
+    level=logging.DEBUG,
+    format='%(asctime)s %(levelname)s: %(message)s'
+)
 
-if sys.executable != INTERP:
-    os.execl(INTERP, INTERP, *sys.argv)
+try:
+    # Get the absolute path of the current directory
+    CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+    
+    # Add the application directory to the Python path
+    sys.path.insert(0, CURRENT_DIR)
+    
+    # Import the Flask application
+    from app import app as application
+    
+    # Log environment variables (excluding sensitive ones)
+    logging.info("Environment variables:")
+    for key in ['FLASK_ENV', 'SITE_URL', 'COMPANY_NAME']:
+        logging.info(f"{key}: {os.getenv(key)}")
 
-# Add your application directory to the Python path
-sys.path.append(os.getcwd())
-
-# Import the Flask application
-from app import app as application
-
-# This is the entry point for Passenger WSGI
-application.secret_key = os.getenv('SECRET_KEY', 'your-secret-key-here') 
+except Exception as e:
+    logging.error(f"Error in passenger_wsgi.py: {str(e)}", exc_info=True)
+    raise 
