@@ -2,21 +2,22 @@ import os
 import pymysql
 pymysql.install_as_MySQLdb()
 
+# Get database credentials from environment
+db_user = os.getenv('MYSQL_USER')
+db_pass = os.getenv('MYSQL_PASSWORD')
+db_host = os.getenv('MYSQL_HOST')
+db_name = os.getenv('MYSQL_DATABASE')
+
+print(f"Connecting to database {db_name} on {db_host} as {db_user}")
+
+# Set environment variable for database URL
+os.environ['DATABASE_URL'] = f"mysql://{db_user}:{db_pass}@{db_host}/{db_name}"
+
+# Now import the app after setting the environment variable
 from app import app, db, User, init_cryptocurrencies
 from werkzeug.security import generate_password_hash
 
 def initialize_database():
-    # Get database credentials from environment
-    db_user = os.getenv('MYSQL_USER')
-    db_pass = os.getenv('MYSQL_PASSWORD')
-    db_host = os.getenv('MYSQL_HOST')
-    db_name = os.getenv('MYSQL_DATABASE')
-
-    print(f"Connecting to database {db_name} on {db_host} as {db_user}")
-
-    # Update the database URI
-    app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql://{db_user}:{db_pass}@{db_host}/{db_name}"
-
     with app.app_context():
         try:
             # Create all tables

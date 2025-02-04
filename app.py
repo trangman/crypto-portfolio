@@ -28,7 +28,7 @@ DB_NAME = os.getenv('MYSQL_DATABASE', 'crypto_portfolio')
 app.logger.info(f"Connecting to database {DB_NAME} on {DB_HOST} as {DB_USER}")
 
 # Construct database URL
-app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'mysql://root:@localhost/crypto_portfolio')
 
 # Production settings
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
