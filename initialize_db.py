@@ -1,6 +1,29 @@
 import os
+import sys
 import pymysql
 pymysql.install_as_MySQLdb()
+
+# Required environment variables
+required_vars = {
+    'MYSQL_USER': 'Database username',
+    'MYSQL_PASSWORD': 'Database password',
+    'MYSQL_HOST': 'Database host',
+    'MYSQL_DATABASE': 'Database name'
+}
+
+# Check for missing environment variables
+missing_vars = [var for var in required_vars if not os.getenv(var)]
+if missing_vars:
+    print("Error: Missing required environment variables:")
+    for var in missing_vars:
+        print(f"  - {var}: {required_vars[var]}")
+    print("\nPlease set these environment variables before running the script.")
+    print("Example (PowerShell):")
+    print("$env:MYSQL_USER = 'your_username'")
+    print("$env:MYSQL_PASSWORD = 'your_password'")
+    print("$env:MYSQL_HOST = 'your_host'")
+    print("$env:MYSQL_DATABASE = 'your_database'")
+    sys.exit(1)
 
 # Get database credentials from environment
 db_user = os.getenv('MYSQL_USER')
