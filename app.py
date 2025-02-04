@@ -515,8 +515,15 @@ def get_prices():
         print(f"Error fetching prices: {str(e)}")
         return jsonify({'success': False, 'message': 'Error fetching prices'}), 500
 
+# Move this to the bottom of the file
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         init_cryptocurrencies()  # Initialize cryptocurrencies table
-    app.run(debug=False) 
+    
+    # In development, you can use debug mode
+    if os.getenv('FLASK_ENV') == 'development':
+        app.run(debug=True)
+    else:
+        # In production, no debug mode
+        app.run(host='127.0.0.1', port=8000) 
