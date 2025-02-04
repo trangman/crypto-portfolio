@@ -19,12 +19,18 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Database configuration
-DB_USER = os.getenv('MYSQL_USER', 'root')
-DB_PASS = os.getenv('MYSQL_PASSWORD', '')
+DB_USER = os.getenv('MYSQL_USER')
+DB_PASS = os.getenv('MYSQL_PASSWORD')
 DB_HOST = os.getenv('MYSQL_HOST', 'localhost')
-DB_NAME = os.getenv('MYSQL_DATABASE', 'crypto_portfolio')
+DB_NAME = os.getenv('MYSQL_DATABASE')
+
+# Log database configuration (without sensitive info)
+app.logger.info(f"Connecting to database {DB_NAME} on {DB_HOST} as {DB_USER}")
 
 # Construct database URL
+if not all([DB_USER, DB_PASS, DB_HOST, DB_NAME]):
+    raise ValueError("Missing required database environment variables. Please check your configuration.")
+
 app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
 
 # Production settings
