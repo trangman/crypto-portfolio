@@ -20,7 +20,7 @@ app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'your-secure-secre
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Database configuration for Namecheap
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'mysql://root:@localhost/crypto_portfolio')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI', 'mysql://root:@localhost/crypto_portfolio')
 
 # Production settings
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
