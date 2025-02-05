@@ -53,4 +53,20 @@ PassengerPython /home/username/virtualenv/your_app_directory/3.9/bin/python
 <FilesMatch "^(\.env|\.gitignore|requirements\.txt|passenger_wsgi\.py)$">
     Order allow,deny
     Deny from all
-</FilesMatch> 
+</FilesMatch>
+
+Options -Indexes
+
+<Files *.py>
+    Order Deny,Allow
+    Deny from all
+</Files>
+
+<Files passenger_wsgi.py>
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+AddHandler wsgi-script .py
+DirectoryIndex disabled
+DirectoryIndex passenger_wsgi.py 
