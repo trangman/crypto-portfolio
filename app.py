@@ -283,10 +283,19 @@ def dashboard():
 @app.route('/admin')
 @login_required
 def admin():
-    if not current_user.is_admin:
+    try:
+        if not current_user.is_admin:
+            flash('Access denied. Admin privileges required.')
+            return redirect(url_for('dashboard'))
+            
+        users = User.query.all()
+        return render_template('admin.html', users=users)
+        
+    except Exception as e:
+        app.logger.error('Admin page error: %s', str(e), exc_info=True)
+        db.session.rollback()
+        flash('An error occurred while loading the admin page')
         return redirect(url_for('dashboard'))
-    users = User.query.all()
-    return render_template('admin.html', users=users)
 
 @app.route('/transaction', methods=['GET', 'POST'])
 @login_required
@@ -399,10 +408,19 @@ def register():
 @app.route('/cryptocurrency')
 @login_required
 def cryptocurrency_list():
-    if not current_user.is_admin:
-        return redirect(url_for('dashboard'))
-    cryptocurrencies = Cryptocurrency.query.all()
-    return render_template('cryptocurrency.html', cryptocurrencies=cryptocurrencies)
+    try:
+        if not current_user.is_admin:
+            flash('Access denied. Admin privileges required.')
+            return redirect(url_for('dashboard'))
+            
+        cryptocurrencies = Cryptocurrency.query.all()
+        return render_template('cryptocurrency.html', cryptocurrencies=cryptocurrencies)
+        
+    except Exception as e:
+        app.logger.error('Cryptocurrency page error: %s', str(e), exc_info=True)
+        db.session.rollback()
+        flash('An error occurred while loading the cryptocurrency page')
+        return redirect(url_for('admin'))
 
 @app.route('/cryptocurrency/add', methods=['POST'])
 @login_required
