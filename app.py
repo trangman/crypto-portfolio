@@ -288,10 +288,21 @@ def admin():
             app.logger.warning('Non-admin user attempted to access admin page: %s', current_user.username)
             flash('Access denied. Admin privileges required.')
             return redirect(url_for('dashboard'))
-            
+        
+        # Ensure we have a fresh database session
+        db.session.rollback()
+        
         app.logger.info('Fetching users for admin page')
         users = User.query.all()
+        
+        # Log the number of users found
         app.logger.info('Successfully fetched %d users', len(users))
+        
+        # Check if users were actually retrieved
+        if users is None:
+            app.logger.error('User query returned None')
+            raise Exception('Failed to retrieve users')
+            
         return render_template('admin.html', users=users)
         
     except Exception as e:
@@ -551,13 +562,103 @@ def get_prices():
         print(f"Error fetching prices: {str(e)}")
         return jsonify({'success': False, 'message': 'Error fetching prices'}), 500
 
+@app.route('/user/<int:user_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_user(user_id):
+    try:
+        if not current_user.is_admin:
+            flash('Access denied. Admin privileges required.')
+            return redirect(url_for('dashboard'))
+            
+        user = User.query.get_or_404(user_id)
+        
+        if request.method == 'POST':
+            username = request.form.get('username')
+            email = request.form.get('email')
+            new_password = request.form.get('new_password')
+            confirm_password = request.form.get('confirm_password')
+            is_admin = request.form.get('is_admin') == 'on'
+            
+            # Check if username is taken by another user
+            existing_user = User.query.filter_by(username=username).first()
+            if existing_user and existing_user.id != user_id:
+                flash('Username already exists')
+                return render_template('edit_user.html', user=user)
+                
+            # Check if email is taken by another user
+            existing_user = User.query.filter_by(email=email).first()
+            if existing_user and existing_user.id != user_id:
+                flash('Email already exists')
+                return render_template('edit_user.html', user=user)
+            
+            # Update user information
+            user.username = username
+            user.email = email
+            user.is_admin = is_admin
+            
+            # Update password if provided
+            if new_password:
+                if new_password != confirm_password:
+                    flash('Passwords do not match')
+                    return render_template('edit_user.html', user=user)
+                user.password_hash = generate_password_hash(new_password)
+            
+            db.session.commit()
+            flash('User updated successfully')
+            return redirect(url_for('admin'))
+            
+        return render_template('edit_user.html', user=user)
+        
+    except Exception as e:
+        app.logger.error('Error editing user: %s', str(e), exc_info=True)
+        db.session.rollback()
+        flash('An error occurred while editing the user')
+        return redirect(url_for('admin'))
+
+@app.route('/user/<int:user_id>/reset-password', methods=['GET', 'POST'])
+@login_required
+def reset_user_password(user_id):
+    try:
+        if not current_user.is_admin:
+            flash('Access denied. Admin privileges required.')
+            return redirect(url_for('dashboard'))
+            
+        user = User.query.get_or_404(user_id)
+        
+        if request.method == 'POST':
+            new_password = request.form.get('new_password')
+            confirm_password = request.form.get('confirm_password')
+            
+            if not new_password or not confirm_password:
+                flash('Please enter both password fields')
+                return render_template('reset_password.html', user=user)
+                
+            if new_password != confirm_password:
+                flash('Passwords do not match')
+                return render_template('reset_password.html', user=user)
+            
+            user.password_hash = generate_password_hash(new_password)
+            db.session.commit()
+            
+            flash('Password reset successfully')
+            return redirect(url_for('admin'))
+            
+        return render_template('reset_password.html', user=user)
+        
+    except Exception as e:
+        app.logger.error('Error resetting password: %s', str(e), exc_info=True)
+        db.session.rollback()
+        flash('An error occurred while resetting the password')
+        return redirect(url_for('admin'))
+
 # Add this at the bottom of the file
 if __name__ == '__main__':
     with app.app_context():
         try:
             # Test database connection
             app.logger.info('Testing database connection...')
-            db.session.execute('SELECT 1')
+            from sqlalchemy import text
+            db.session.execute(text('SELECT 1'))
             app.logger.info('Database connection successful')
             
             # Ensure tables exist
