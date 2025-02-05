@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-lg mx-auto">
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-4 sm:px-6 py-4 bg-primary-50 border-b border-primary-100">
+            <h3 class="text-lg sm:text-xl font-semibold text-primary-900">Edit User</h3>
+        </div>
+        <div class="p-4 sm:p-6">
+            <form method="POST">
+                <div class="space-y-4">
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-primary-700 mb-1">Username</label>
+                        <input type="text" name="username" id="username" value="{{ user.username }}" required
+                            class="block w-full px-3 py-2 border border-primary-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                            placeholder="Username">
+                    </div>
+
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-primary-700 mb-1">Email</label>
+                        <input type="email" name="email" id="email" value="{{ user.email }}" required
+                            class="block w-full px-3 py-2 border border-primary-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                            placeholder="Email">
+                    </div>
+
+                    <div>
+                        <label for="new_password" class="block text-sm font-medium text-primary-700 mb-1">New Password (leave blank to keep current)</label>
+                        <input type="password" name="new_password" id="new_password"
+                            class="block w-full px-3 py-2 border border-primary-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                            placeholder="New Password">
+                    </div>
+
+                    <div>
+                        <label for="confirm_password" class="block text-sm font-medium text-primary-700 mb-1">Confirm New Password</label>
+                        <input type="password" name="confirm_password" id="confirm_password"
+                            class="block w-full px-3 py-2 border border-primary-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                            placeholder="Confirm New Password">
+                    </div>
+
+                    {% if current_user.is_admin %}
+                    <div class="flex items-center">
+                        <input type="checkbox" name="is_admin" id="is_admin" {% if user.is_admin %}checked{% endif %}
+                            class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-primary-300 rounded">
+                        <label for="is_admin" class="ml-2 block text-sm text-primary-700">
+                            Administrator Access
+                        </label>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="mt-4 bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded relative" role="alert">
+                                <span class="block sm:inline">{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="mt-6 flex justify-end space-x-4">
+                    <a href="{{ url_for('admin') }}"
+                        class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                        class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 
