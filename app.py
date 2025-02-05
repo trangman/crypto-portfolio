@@ -285,10 +285,13 @@ def dashboard():
 def admin():
     try:
         if not current_user.is_admin:
+            app.logger.warning('Non-admin user attempted to access admin page: %s', current_user.username)
             flash('Access denied. Admin privileges required.')
             return redirect(url_for('dashboard'))
             
+        app.logger.info('Fetching users for admin page')
         users = User.query.all()
+        app.logger.info('Successfully fetched %d users', len(users))
         return render_template('admin.html', users=users)
         
     except Exception as e:
@@ -552,11 +555,24 @@ def get_prices():
 if __name__ == '__main__':
     with app.app_context():
         try:
+            # Test database connection
+            app.logger.info('Testing database connection...')
+            db.session.execute('SELECT 1')
+            app.logger.info('Database connection successful')
+            
+            # Ensure tables exist
+            app.logger.info('Checking database tables...')
             db.create_all()
+            app.logger.info('Database tables verified')
+            
+            # Initialize cryptocurrencies
+            app.logger.info('Checking cryptocurrencies...')
             init_cryptocurrencies()
-            app.logger.info('Database initialized successfully')
+            app.logger.info('Cryptocurrency initialization complete')
+            
         except Exception as e:
-            app.logger.error('Error initializing database: %s', str(e), exc_info=True)
+            app.logger.error('Database initialization error: %s', str(e), exc_info=True)
+            raise
     
     if os.getenv('FLASK_ENV') == 'development':
         app.run(debug=True)
