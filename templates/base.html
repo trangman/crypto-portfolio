@@ -66,7 +66,6 @@
                 <div class="hidden md:flex space-x-4">
                     {% if current_user.is_authenticated %}
                         {% if current_user.is_admin %}
-                            <a href="{{ url_for('admin') }}" class="hover:text-primary-200 transition duration-150">Admin</a>
                             <a href="{{ url_for('register') }}" class="hover:text-primary-200 transition duration-150">Create Client</a>
                         {% endif %}
                         <a href="{{ url_for('dashboard') }}" class="hover:text-primary-200 transition duration-150">Dashboard</a>
@@ -82,7 +81,6 @@
                 <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
                     {% if current_user.is_authenticated %}
                         {% if current_user.is_admin %}
-                            <a href="{{ url_for('admin') }}" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-700">Admin</a>
                             <a href="{{ url_for('register') }}" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-700">Create Client</a>
                         {% endif %}
                         <a href="{{ url_for('dashboard') }}" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-700">Dashboard</a>

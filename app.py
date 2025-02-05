@@ -213,8 +213,7 @@ def login():
             
             if user and check_password_hash(user.password_hash, password):
                 login_user(user)
-                next_page = request.args.get('next')
-                return redirect(next_page or url_for('dashboard'))
+                return redirect(url_for('dashboard'))
             
             flash('Invalid username or password')
             app.logger.warning(f'Failed login attempt for username: {username}')
