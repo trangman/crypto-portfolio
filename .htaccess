@@ -6,22 +6,38 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 
 # Route all requests to passenger_wsgi.py
-RewriteRule ^(.*)$ /passenger_wsgi.py/$1 [QSA,L]
+RewriteRule ^(.*)$ passenger_wsgi.py/$1 [QSA,L]
 
 # Deny access to Python files except passenger_wsgi.py
-<FilesMatch "^(?!passenger_wsgi\.py$).*\.py$">
+<Files *.py>
+    Order Deny,Allow
+    Deny from all
+</Files>
+
+<Files passenger_wsgi.py>
     Order Allow,Deny
+    Allow from all
+</Files>
+
+# Deny access to sensitive files
+<FilesMatch "^(\.env|\.gitignore|requirements\.txt)$">
+    Order Deny,Allow
     Deny from all
 </FilesMatch>
 
-# Deny access to .env and other sensitive files
-<FilesMatch "^\.env|\.git">
-    Order Allow,Deny
-    Deny from all
-</FilesMatch>
+# Disable directory listing
+Options -Indexes
 
 # Set default character set
 AddDefaultCharset UTF-8
+
+# Enable WSGI
+AddHandler wsgi-script .py
+DirectoryIndex disabled
+DirectoryIndex passenger_wsgi.py
+
+# Enable Passenger
+PassengerEnabled On
 
 # Enable compression
 <IfModule mod_deflate.c>
@@ -36,7 +52,6 @@ AddDefaultCharset UTF-8
     AddOutputFilterByType DEFLATE application/x-javascript
 </IfModule>
 
-PassengerEnabled On
 PassengerPython /home/username/virtualenv/your_app_directory/3.9/bin/python
 
 <IfModule mod_rewrite.c>
@@ -47,26 +62,4 @@ PassengerPython /home/username/virtualenv/your_app_directory/3.9/bin/python
 <Files ~ "^\.">
     Order allow,deny
     Deny from all
-</Files>
-
-# Protect sensitive files
-<FilesMatch "^(\.env|\.gitignore|requirements\.txt|passenger_wsgi\.py)$">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
-
-Options -Indexes
-
-<Files *.py>
-    Order Deny,Allow
-    Deny from all
-</Files>
-
-<Files passenger_wsgi.py>
-    Order Allow,Deny
-    Allow from all
-</Files>
-
-AddHandler wsgi-script .py
-DirectoryIndex disabled
-DirectoryIndex passenger_wsgi.py 
+</Files> 
