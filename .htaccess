@@ -34,4 +34,23 @@ AddDefaultCharset UTF-8
     AddOutputFilterByType DEFLATE application/rss+xml
     AddOutputFilterByType DEFLATE application/javascript
     AddOutputFilterByType DEFLATE application/x-javascript
-</IfModule> 
+</IfModule>
+
+PassengerEnabled On
+PassengerPython /home/username/virtualenv/your_app_directory/3.9/bin/python
+
+<IfModule mod_rewrite.c>
+    RewriteCond %{HTTPS} off
+    RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+</IfModule>
+
+<Files ~ "^\.">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Protect sensitive files
+<FilesMatch "^(\.env|\.gitignore|requirements\.txt|passenger_wsgi\.py)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch> 

@@ -4,6 +4,7 @@ pymysql.install_as_MySQLdb()
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import os
@@ -15,20 +16,11 @@ from logging.handlers import RotatingFileHandler
 app = Flask(__name__)
 
 # Basic configuration
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'your-secure-secret-key-here')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Database configuration
-DB_USER = os.getenv('MYSQL_USER', 'root')
-DB_PASS = os.getenv('MYSQL_PASSWORD', '')
-DB_HOST = os.getenv('MYSQL_HOST', 'localhost')
-DB_NAME = os.getenv('MYSQL_DATABASE', 'crypto_portfolio')
-
-# Log database configuration (without sensitive info)
-app.logger.info(f"Connecting to database {DB_NAME} on {DB_HOST} as {DB_USER}")
-
-# Construct database URL
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'mysql://root:@localhost/crypto_portfolio')
+# Database configuration for Namecheap
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI', 'mysql://root:@localhost/crypto_portfolio')
 
 # Production settings
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
@@ -43,12 +35,13 @@ app.config['PREFERRED_URL_SCHEME'] = 'https'
 
 # Initialize extensions
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-# Site configuration from environment variables
-SITE_URL = os.getenv('SITE_URL', 'http://localhost:5000').rstrip('/')
-COMPANY_NAME = os.getenv('COMPANY_NAME', 'Investment Tracker')
+# Site configuration
+SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8000')
+COMPANY_NAME = os.environ.get('COMPANY_NAME', 'Investment Tracker')
 
 # Set up logging
 if not os.path.exists('logs'):
@@ -64,8 +57,7 @@ app.logger.info('Application startup')
 
 # Log configuration (excluding sensitive data)
 app.logger.info(f"SITE_URL: {SITE_URL}")
-app.logger.info(f"DB_HOST: {DB_HOST}")
-app.logger.info(f"DB_NAME: {DB_NAME}")
+app.logger.info(f"Database URL: {app.config['SQLALCHEMY_DATABASE_URI']}")
 
 # Add context processor for footer variables
 @app.context_processor
@@ -94,14 +86,17 @@ class Cryptocurrency(db.Model):
     symbol = db.Column(db.String(10), unique=True, nullable=False)
     name = db.Column(db.String(100), nullable=False)
     current_price = db.Column(db.Float, nullable=False)
+    price_24h_ago = db.Column(db.Float, nullable=True)
+    price_change_24h = db.Column(db.Float, nullable=True)
+    price_change_percentage_24h = db.Column(db.Float, nullable=True)
     last_updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     transactions = db.relationship('Transaction', backref='cryptocurrency', lazy=True)
 
     def update_price(self):
         try:
-            # Using CoinGecko API to get current price
+            # Using CoinGecko API to get current price and 24h change
             response = requests.get(
-                f'https://api.coingecko.com/api/v3/simple/price?ids={self.name.lower()}&vs_currencies=usd',
+                f'https://api.coingecko.com/api/v3/simple/price?ids={self.name.lower()}&vs_currencies=usd&include_24hr_change=true',
                 headers={'accept': 'application/json'}
             )
             
@@ -112,14 +107,18 @@ class Cryptocurrency(db.Model):
                 
             if response.status_code == 200:
                 data = response.json()
-                new_price = data[self.name.lower()]['usd']
+                coin_data = data[self.name.lower()]
+                new_price = coin_data['usd']
                 
-                # Only update if price has changed
-                if new_price != self.current_price:
+                # Store the current price as price_24h_ago before updating
+                if self.current_price != new_price:
+                    self.price_24h_ago = self.current_price
                     self.current_price = new_price
+                    self.price_change_24h = new_price - (self.price_24h_ago or new_price)
+                    self.price_change_percentage_24h = coin_data.get('usd_24h_change', 0)
                     self.last_updated = datetime.utcnow()
                     db.session.commit()
-                    print(f"Updated {self.symbol} price to ${new_price}")
+                    print(f"Updated {self.symbol} price to ${new_price} (24h change: {self.price_change_percentage_24h:.2f}%)")
                 return True
             else:
                 print(f"Error updating {self.symbol}: HTTP {response.status_code}")
@@ -202,21 +201,21 @@ def index():
 def login():
     try:
         if request.method == 'POST':
-            username = request.form.get('username')
+            email = request.form.get('email')
             password = request.form.get('password')
             
-            if not username or not password:
-                flash('Please enter both username and password')
+            if not email or not password:
+                flash('Please enter both email and password')
                 return render_template('login.html')
             
-            user = User.query.filter_by(username=username).first()
+            user = User.query.filter_by(email=email).first()
             
             if user and check_password_hash(user.password_hash, password):
                 login_user(user)
                 return redirect(url_for('dashboard'))
             
-            flash('Invalid username or password')
-            app.logger.warning(f'Failed login attempt for username: {username}')
+            flash('Invalid email or password')
+            app.logger.warning(f'Failed login attempt for email: {email}')
             
         return render_template('login.html')
         
@@ -236,49 +235,84 @@ def logout():
 @login_required
 def dashboard():
     try:
-        # Get all user transactions
-        transactions = Transaction.query.filter_by(user_id=current_user.id).all()
-        
-        # Calculate portfolio holdings
-        holdings = {}
-        for transaction in transactions:
-            crypto = transaction.cryptocurrency
-            if crypto.symbol not in holdings:
-                holdings[crypto.symbol] = {
-                    'symbol': crypto.symbol,
-                    'name': crypto.name,
-                    'current_price': crypto.current_price,
-                    'total_units': 0,
-                    'total_investment': 0,
-                }
-            
-            if transaction.transaction_type == 'buy':
-                holdings[crypto.symbol]['total_units'] += transaction.units
-                holdings[crypto.symbol]['total_investment'] += transaction.investment_amount
-            else:  # sell
-                holdings[crypto.symbol]['total_units'] -= transaction.units
-                holdings[crypto.symbol]['total_investment'] -= transaction.investment_amount
-        
-        # Calculate current values and profit/loss
-        portfolio = []
-        for symbol, holding in holdings.items():
-            if holding['total_units'] > 0:  # Only show active holdings
-                current_value = holding['total_units'] * holding['current_price']
-                profit_loss = current_value - holding['total_investment']
-                profit_loss_percentage = (profit_loss / holding['total_investment']) * 100 if holding['total_investment'] != 0 else 0
-                
-                holding['current_value'] = current_value
-                holding['profit_loss'] = profit_loss
-                holding['profit_loss_percentage'] = profit_loss_percentage
-                portfolio.append(holding)
-        
-        return render_template('dashboard.html', transactions=transactions, portfolio=portfolio)
-        
-    except Exception as e:
+        # Ensure we have a fresh session
         db.session.rollback()
-        flash('An error occurred while loading your portfolio')
-        print(f"Error: {str(e)}")
-        return redirect(url_for('index'))
+        
+        # Log user role
+        app.logger.info(f'User accessing dashboard: {current_user.username} (Admin: {current_user.is_admin})')
+        
+        # Get transactions based on user role
+        if current_user.is_admin:
+            app.logger.info('Admin user detected - fetching all transactions')
+            transactions = Transaction.query.options(
+                db.joinedload(Transaction.user),
+                db.joinedload(Transaction.cryptocurrency)
+            ).order_by(Transaction.timestamp.desc()).all()
+            
+            app.logger.info(f'Admin dashboard: Found {len(transactions)} total transactions')
+            
+            # Empty portfolio for admin users
+            portfolio = []
+            app.logger.info('Admin user - setting empty portfolio')
+        else:
+            app.logger.info('Regular user detected - fetching user transactions')
+            transactions = Transaction.query.filter_by(user_id=current_user.id).options(
+                db.joinedload(Transaction.cryptocurrency)
+            ).order_by(Transaction.timestamp.desc()).all()
+            
+            app.logger.info(f'User dashboard: Found {len(transactions)} transactions for user {current_user.username}')
+            
+            # Calculate portfolio holdings for regular users
+            portfolio = []
+            holdings = {}
+            
+            for transaction in transactions:
+                crypto = transaction.cryptocurrency
+                if crypto.symbol not in holdings:
+                    holdings[crypto.symbol] = {
+                        'symbol': crypto.symbol,
+                        'name': crypto.name,
+                        'total_units': 0,
+                        'total_investment': 0
+                    }
+                
+                if transaction.transaction_type == 'buy':
+                    holdings[crypto.symbol]['total_units'] += transaction.units
+                    holdings[crypto.symbol]['total_investment'] += transaction.investment_amount
+                else:  # sell
+                    holdings[crypto.symbol]['total_units'] -= transaction.units
+                    holdings[crypto.symbol]['total_investment'] -= transaction.investment_amount
+
+            # Update crypto prices and calculate current values
+            for symbol, holding in holdings.items():
+                if holding['total_units'] > 0:  # Only show active holdings
+                    crypto = Cryptocurrency.query.filter_by(symbol=symbol).first()
+                    # Update price before calculating values
+                    crypto.update_price()
+                    
+                    current_value = holding['total_units'] * crypto.current_price
+                    avg_purchase_price = holding['total_investment'] / holding['total_units']
+                    price_change_since_purchase = crypto.current_price - avg_purchase_price
+                    
+                    holding.update({
+                        'current_price': crypto.current_price,
+                        'current_value': current_value,
+                        'profit_loss': current_value - holding['total_investment'],
+                        'profit_loss_percentage': ((current_value - holding['total_investment']) / holding['total_investment']) * 100,
+                        'price_change_percentage_24h': crypto.price_change_percentage_24h,
+                        'price_change_percentage_since_purchase': (price_change_since_purchase / avg_purchase_price) * 100
+                    })
+                    portfolio.append(holding)
+            
+            # Commit the price updates
+            db.session.commit()
+
+        return render_template('dashboard.html', transactions=transactions, portfolio=portfolio)
+    except Exception as e:
+        app.logger.error(f"Error in dashboard route: {str(e)}", exc_info=True)
+        db.session.rollback()
+        flash('An error occurred while loading the dashboard')
+        return redirect(url_for('error_handler'))
 
 @app.route('/admin')
 @login_required
@@ -294,16 +328,43 @@ def admin():
         
         app.logger.info('Fetching users for admin page')
         users = User.query.all()
-        
-        # Log the number of users found
         app.logger.info('Successfully fetched %d users', len(users))
         
-        # Check if users were actually retrieved
-        if users is None:
-            app.logger.error('User query returned None')
-            raise Exception('Failed to retrieve users')
+        # Direct SQL query to check transactions
+        from sqlalchemy import text
+        result = db.session.execute(text('SELECT COUNT(*) FROM transactions'))
+        count = result.scalar()
+        app.logger.info('Direct SQL query shows %d transactions in database', count)
+        
+        # Fetch all transactions with eager loading of relationships
+        app.logger.info('Fetching all transactions')
+        transactions = Transaction.query.options(
+            db.joinedload(Transaction.user),
+            db.joinedload(Transaction.cryptocurrency)
+        ).order_by(Transaction.timestamp.desc()).all()
+        app.logger.info('Successfully fetched %d transactions', len(transactions))
+        
+        # Log transaction details for debugging
+        if transactions:
+            app.logger.info('Transaction details:')
+            for transaction in transactions:
+                try:
+                    app.logger.info(
+                        'Transaction: ID=%d, User=%s, Type=%s, Crypto=%s, Amount=%.2f, Units=%.4f, Timestamp=%s', 
+                        transaction.id,
+                        transaction.user.username,
+                        transaction.transaction_type,
+                        transaction.cryptocurrency.symbol,
+                        transaction.investment_amount,
+                        transaction.units,
+                        transaction.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+                    )
+                except Exception as e:
+                    app.logger.error('Error logging transaction details: %s', str(e))
+        else:
+            app.logger.warning('No transactions found in database')
             
-        return render_template('admin.html', users=users)
+        return render_template('admin.html', users=users, transactions=transactions)
         
     except Exception as e:
         app.logger.error('Admin page error: %s', str(e), exc_info=True)
@@ -315,20 +376,30 @@ def admin():
 @login_required
 def transaction():
     if not current_user.is_admin:
+        flash('Only administrators can add transactions')
         return redirect(url_for('dashboard'))
     
     if request.method == 'POST':
         try:
+            # Start with a fresh session
+            db.session.rollback()
+            
             user_id = request.form.get('user_id')
             crypto_id = request.form.get('crypto_id')
             investment_amount = float(request.form.get('investment_amount'))
             transaction_type = request.form.get('transaction_type')
             
+            app.logger.info(f'Creating new transaction: user_id={user_id}, crypto_id={crypto_id}, amount={investment_amount}, type={transaction_type}')
+            
             # Get the cryptocurrency and its current price
             crypto = Cryptocurrency.query.get(crypto_id)
             if not crypto:
+                app.logger.error(f'Invalid cryptocurrency ID: {crypto_id}')
                 flash('Invalid cryptocurrency selected')
                 return redirect(url_for('transaction'))
+            
+            # Update crypto price before creating transaction
+            crypto.update_price()
             
             # Create new transaction
             new_transaction = Transaction(
@@ -342,26 +413,40 @@ def transaction():
             # Calculate the number of units
             new_transaction.calculate_units()
             
+            app.logger.info(f'Transaction details: price={crypto.current_price}, units={new_transaction.units}')
+            
             db.session.add(new_transaction)
             db.session.commit()
+            app.logger.info('Transaction added successfully')
             flash('Transaction added successfully')
+            
+            return redirect(url_for('admin'))
             
         except Exception as e:
             db.session.rollback()
+            app.logger.error(f'Error adding transaction: {str(e)}', exc_info=True)
             flash('Error adding transaction')
-            print(f"Error: {str(e)}")
-            
-        return redirect(url_for('admin'))
+            return redirect(url_for('transaction'))
     
-    # Get clients and cryptocurrencies
-    users = User.query.filter_by(is_admin=False).all()
-    cryptocurrencies = Cryptocurrency.query.all()
-    print(f"Found {len(cryptocurrencies)} cryptocurrencies:")
-    for crypto in cryptocurrencies:
-        print(f"- {crypto.symbol}: {crypto.name} (${crypto.current_price})")
-        crypto.update_price()
-    
-    return render_template('transaction.html', users=users, cryptocurrencies=cryptocurrencies)
+    try:
+        # Get clients and cryptocurrencies with a fresh session
+        db.session.rollback()
+        
+        users = User.query.filter_by(is_admin=False).all()
+        cryptocurrencies = Cryptocurrency.query.all()
+        
+        # Update crypto prices
+        for crypto in cryptocurrencies:
+            crypto.update_price()
+        db.session.commit()
+        
+        app.logger.info(f'Transaction form: Found {len(users)} clients and {len(cryptocurrencies)} cryptocurrencies')
+        return render_template('transaction.html', users=users, cryptocurrencies=cryptocurrencies)
+        
+    except Exception as e:
+        app.logger.error(f'Error loading transaction form: {str(e)}', exc_info=True)
+        flash('Error loading transaction form')
+        return redirect(url_for('dashboard'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():

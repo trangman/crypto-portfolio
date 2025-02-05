@@ -17,16 +17,16 @@
                 extend: {
                     colors: {
                         primary: {
-                            50: '#faf5ff',
-                            100: '#f3e8ff',
-                            200: '#e9d5ff',
-                            300: '#d8b4fe',
-                            400: '#c084fc',
-                            500: '#a855f7',
-                            600: '#9333ea',
-                            700: '#7e22ce',
-                            800: '#6b21a8',
-                            900: '#581c87'
+                            50: '#eef1f8',
+                            100: '#d5ddf0',
+                            200: '#b3c1e4',
+                            300: '#8a9fd5',
+                            400: '#6c85c9',
+                            500: '#294497',  // Main color
+                            600: '#243d88',
+                            700: '#1f3573',
+                            800: '#1a2d5f',
+                            900: '#15244c'
                         }
                     }
                 }
@@ -44,18 +44,15 @@
     </style>
 </head>
 <body class="flex flex-col min-h-full bg-gray-50">
-    <nav class="bg-primary-800 text-white p-4">
+    <nav class="bg-white shadow-md text-primary-900 p-4">
         <div class="container min-content-width mx-auto px-4">
             <div class="flex justify-between items-center">
                 <a href="{{ url_for('index') }}" class="text-xl font-bold flex items-center flex-shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    <span class="whitespace-nowrap">Investment Tracker</span>
+                    <img src="{{ url_for('static', filename='images/barbican-logo.png') }}" alt="Barbican Capital Management" class="h-12 mr-2">
                 </a>
 
                 <!-- Mobile menu button -->
-                <button id="mobile-menu-button" class="md:hidden flex items-center px-3 py-2 border rounded text-primary-200 border-primary-400 hover:text-white hover:border-white">
+                <button id="mobile-menu-button" class="md:hidden flex items-center px-3 py-2 border rounded text-primary-600 border-primary-400 hover:text-primary-800 hover:border-primary-800">
                     <svg class="h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                         <title>Menu</title>
                         <path fill="currentColor" d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z"/>
@@ -66,13 +63,13 @@
                 <div class="hidden md:flex space-x-4">
                     {% if current_user.is_authenticated %}
                         {% if current_user.is_admin %}
-                            <a href="{{ url_for('admin') }}" class="hover:text-primary-200 transition duration-150">Admin</a>
-                            <a href="{{ url_for('register') }}" class="hover:text-primary-200 transition duration-150">Create Client</a>
+                            <a href="{{ url_for('admin') }}" class="text-primary-600 hover:text-primary-800 transition duration-150">Admin</a>
+                            <a href="{{ url_for('register') }}" class="text-primary-600 hover:text-primary-800 transition duration-150">Create Client</a>
                         {% endif %}
-                        <a href="{{ url_for('dashboard') }}" class="hover:text-primary-200 transition duration-150">Dashboard</a>
-                        <a href="{{ url_for('logout') }}" class="hover:text-primary-200 transition duration-150">Logout</a>
+                        <a href="{{ url_for('dashboard') }}" class="text-primary-600 hover:text-primary-800 transition duration-150">Dashboard</a>
+                        <a href="{{ url_for('logout') }}" class="text-primary-600 hover:text-primary-800 transition duration-150">Logout</a>
                     {% else %}
-                        <a href="{{ url_for('login') }}" class="hover:text-primary-200 transition duration-150">Login</a>
+                        <a href="{{ url_for('login') }}" class="text-primary-600 hover:text-primary-800 transition duration-150">Login</a>
                     {% endif %}
                 </div>
             </div>
@@ -82,14 +79,13 @@
                 <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
                     {% if current_user.is_authenticated %}
                         {% if current_user.is_admin %}
-                            <a href="{{ url_for('admin') }}" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-700">Admin</a>
-                            <a href="{{ url_for('register') }}" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-700">Create Client</a>
+                            <a href="{{ url_for('admin') }}" class="block px-3 py-2 rounded-md text-base font-medium text-primary-600 hover:text-primary-800 hover:bg-gray-50">Admin</a>
+                            <a href="{{ url_for('register') }}" class="block px-3 py-2 rounded-md text-base font-medium text-primary-600 hover:text-primary-800 hover:bg-gray-50">Create Client</a>
                         {% endif %}
-                        <a href="{{ url_for('dashboard') }}" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-700">Dashboard</a>
-                        <a href="{{ url_for('transaction') }}" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-700">Add Transaction</a>
-                        <a href="{{ url_for('logout') }}" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-700">Logout</a>
+                        <a href="{{ url_for('dashboard') }}" class="block px-3 py-2 rounded-md text-base font-medium text-primary-600 hover:text-primary-800 hover:bg-gray-50">Dashboard</a>
+                        <a href="{{ url_for('logout') }}" class="block px-3 py-2 rounded-md text-base font-medium text-primary-600 hover:text-primary-800 hover:bg-gray-50">Logout</a>
                     {% else %}
-                        <a href="{{ url_for('login') }}" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-700">Login</a>
+                        <a href="{{ url_for('login') }}" class="block px-3 py-2 rounded-md text-base font-medium text-primary-600 hover:text-primary-800 hover:bg-gray-50">Login</a>
                     {% endif %}
                 </div>
             </div>

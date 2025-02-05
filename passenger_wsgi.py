@@ -5,7 +5,7 @@ import logging
 # Set up logging
 logging.basicConfig(
     filename='app_error.log',
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s %(levelname)s: %(message)s'
 )
 
@@ -20,8 +20,9 @@ try:
     from app import app as application
     
     # Log environment variables (excluding sensitive ones)
-    logging.info("Environment variables:")
-    for key in ['FLASK_ENV', 'SITE_URL', 'COMPANY_NAME']:
+    logging.info("Environment Configuration:")
+    safe_vars = ['FLASK_ENV', 'SITE_URL', 'COMPANY_NAME']
+    for key in safe_vars:
         logging.info(f"{key}: {os.getenv(key)}")
 
 except Exception as e:
