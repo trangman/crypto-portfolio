@@ -10,19 +10,19 @@ logging.basicConfig(
 )
 
 # Get the absolute path of the current directory
-INTERP = os.path.dirname(os.path.abspath(__file__))
+INTERP = "/home/username/virtualenv/app.barbicancapitalmanagement.com/3.9/bin/python"
+if sys.executable != INTERP:
+    os.execl(INTERP, INTERP, *sys.argv)
+
+cwd = os.path.dirname(os.path.abspath(__file__))
 
 # Add the virtual environment site-packages
-if os.path.exists(os.path.join(INTERP, 'venv')):
-    VENV_PATH = os.path.join(INTERP, 'venv', 'Lib', 'site-packages')
-else:
-    VENV_PATH = os.path.join(INTERP, 'virtualenv', 'Lib', 'site-packages')
-
+VENV_PATH = '/home/username/virtualenv/app.barbicancapitalmanagement.com/3.9/lib/python3.9/site-packages'
 if os.path.exists(VENV_PATH):
     sys.path.insert(0, VENV_PATH)
 
 # Add the application directory to the Python path
-sys.path.insert(0, INTERP)
+sys.path.insert(0, cwd)
 
 try:
     # Import the Flask application

@@ -38,6 +38,11 @@ DirectoryIndex passenger_wsgi.py
 
 # Enable Passenger
 PassengerEnabled On
+PassengerAppRoot /home/username/app.barbicancapitalmanagement.com
+PassengerBaseURI /
+PassengerPython /home/username/virtualenv/app.barbicancapitalmanagement.com/3.9/bin/python
+PassengerAppType wsgi
+PassengerStartupFile passenger_wsgi.py
 
 # Enable compression
 <IfModule mod_deflate.c>
@@ -52,8 +57,7 @@ PassengerEnabled On
     AddOutputFilterByType DEFLATE application/x-javascript
 </IfModule>
 
-PassengerPython /home/username/virtualenv/your_app_directory/3.9/bin/python
-
+# Force HTTPS
 <IfModule mod_rewrite.c>
     RewriteCond %{HTTPS} off
     RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
