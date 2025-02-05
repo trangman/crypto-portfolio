@@ -200,17 +200,32 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        user = User.query.filter_by(username=username).first()
+    try:
+        if request.method == 'POST':
+            username = request.form.get('username')
+            password = request.form.get('password')
+            
+            if not username or not password:
+                flash('Please enter both username and password')
+                return render_template('login.html')
+            
+            user = User.query.filter_by(username=username).first()
+            
+            if user and check_password_hash(user.password_hash, password):
+                login_user(user)
+                next_page = request.args.get('next')
+                return redirect(next_page or url_for('dashboard'))
+            
+            flash('Invalid username or password')
+            app.logger.warning(f'Failed login attempt for username: {username}')
+            
+        return render_template('login.html')
         
-        if user and check_password_hash(user.password_hash, password):
-            login_user(user)
-            next_page = request.args.get('next')
-            return redirect(next_page or url_for('dashboard'))
-        flash('Invalid username or password')
-    return render_template('login.html')
+    except Exception as e:
+        app.logger.error('Login error: %s', str(e), exc_info=True)
+        db.session.rollback()
+        flash('An error occurred during login. Please try again.')
+        return render_template('login.html')
 
 @app.route('/logout')
 @login_required
