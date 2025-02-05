@@ -27,10 +27,19 @@
             }
         }
     </script>
+    <style>
+        /* Ensure minimum content width */
+        .min-content-width {
+            min-width: min(100%, 360px);
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+        }
+    </style>
 </head>
-<body class="flex flex-col min-h-full bg-gray-50 min-w-[320px]">
+<body class="flex flex-col min-h-full bg-gray-50">
     <nav class="bg-primary-800 text-white p-4">
-        <div class="container mx-auto px-4">
+        <div class="container min-content-width mx-auto px-4">
             <div class="flex justify-between items-center">
                 <a href="{{ url_for('index') }}" class="text-xl font-bold flex items-center flex-shrink-0">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -63,23 +72,26 @@
             </div>
 
             <!-- Mobile menu -->
-            <div id="mobile-menu" class="hidden md:hidden mt-4">
-                {% if current_user.is_authenticated %}
-                    {% if current_user.is_admin %}
-                        <a href="{{ url_for('admin') }}" class="block py-2 hover:text-primary-200 transition duration-150">Admin</a>
-                        <a href="{{ url_for('register') }}" class="block py-2 hover:text-primary-200 transition duration-150">Create Client</a>
+            <div id="mobile-menu" class="hidden md:hidden">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.is_admin %}
+                            <a href="{{ url_for('admin') }}" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-700">Admin</a>
+                            <a href="{{ url_for('register') }}" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-700">Create Client</a>
+                        {% endif %}
+                        <a href="{{ url_for('dashboard') }}" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-700">Dashboard</a>
+                        <a href="{{ url_for('transaction') }}" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-700">Add Transaction</a>
+                        <a href="{{ url_for('logout') }}" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-700">Logout</a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-primary-700">Login</a>
                     {% endif %}
-                    <a href="{{ url_for('dashboard') }}" class="block py-2 hover:text-primary-200 transition duration-150">Dashboard</a>
-                    <a href="{{ url_for('logout') }}" class="block py-2 hover:text-primary-200 transition duration-150">Logout</a>
-                {% else %}
-                    <a href="{{ url_for('login') }}" class="block py-2 hover:text-primary-200 transition duration-150">Login</a>
-                {% endif %}
+                </div>
             </div>
         </div>
     </nav>
 
-    <main class="flex-grow">
-        <div class="container mx-auto mt-8 px-4 mb-16">
+    <main class="flex-grow py-8">
+        <div class="container min-content-width mx-auto px-4">
             {% with messages = get_flashed_messages() %}
                 {% if messages %}
                     {% for message in messages %}
@@ -95,7 +107,7 @@
     </main>
 
     <footer class="bg-primary-800 text-white">
-        <div class="container mx-auto px-4 py-8">
+        <div class="container min-content-width mx-auto px-4 py-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div>
                     <h3 class="text-lg font-semibold mb-4">About</h3>
