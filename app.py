@@ -152,10 +152,12 @@ class Cryptocurrency(db.Model):
                 
                 # Store the current price as price_24h_ago before updating
                 if self.current_price != new_price:
-                    self.price_24h_ago = self.current_price
+                    # Convert current_price to Decimal if it's not already
+                    current_price_decimal = Decimal(str(self.current_price)) if self.current_price else new_price
+                    self.price_24h_ago = current_price_decimal
                     self.current_price = new_price
                     # Ensure both values are Decimal for subtraction
-                    self.price_change_24h = new_price - (self.price_24h_ago or new_price)
+                    self.price_change_24h = new_price - current_price_decimal
                     # Convert percentage to Decimal
                     self.price_change_percentage_24h = Decimal(str(coin_data.get('usd_24h_change', 0)))
                     self.last_updated = datetime.utcnow()
@@ -173,7 +175,6 @@ class Cryptocurrency(db.Model):
         except Exception as e:
             error_msg = f"Error updating price for {self.symbol}: {str(e)}"
             app.logger.error(error_msg)
-            db.session.rollback()
             return False, error_msg
 
 class Transaction(db.Model):
@@ -849,7 +850,7 @@ def cash_transaction():
     if request.method == 'POST':
         try:
             user_id = request.form.get('user_id')
-            amount = Decimal(request.form.get('amount'))
+            amount = Decimal(str(request.form.get('amount')))  # Convert to Decimal immediately
             transaction_type = request.form.get('transaction_type')
             notes = request.form.get('notes')
             
@@ -869,8 +870,8 @@ def cash_transaction():
                 notes=notes
             )
             
-            # Update user's cash balance
-            user.cash_balance = user.cash_balance + actual_amount
+            # Update user's cash balance using Decimal
+            user.cash_balance = Decimal(str(user.cash_balance)) + actual_amount
             
             db.session.add(transaction)
             db.session.commit()
