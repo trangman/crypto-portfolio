@@ -28,7 +28,13 @@ def get_database_url():
         current_path = Path(__file__).resolve()
         if len(current_path.parts) >= 3 and current_path.parts[1] == 'home':
             # We're in a hosting environment
-            return os.environ.get('DATABASE_URL')
+            db_url = os.environ.get('DATABASE_URL')
+            if db_url:
+                app.logger.info("Using production database configuration")
+                return db_url
+            else:
+                app.logger.error("DATABASE_URL not set in production environment")
+                raise ValueError("DATABASE_URL environment variable is required in production")
     except Exception as e:
         app.logger.warning(f"Error detecting environment: {str(e)}")
     
@@ -331,35 +337,36 @@ def dashboard():
                     holdings[crypto.symbol] = {
                         'symbol': crypto.symbol,
                         'name': crypto.name,
-                        'total_units': 0,
-                        'total_investment': 0
+                        'total_units': Decimal('0'),
+                        'total_investment': Decimal('0')
                     }
                 
                 if transaction.transaction_type == 'buy':
-                    holdings[crypto.symbol]['total_units'] += float(transaction.units)
-                    holdings[crypto.symbol]['total_investment'] += float(transaction.investment_amount)
+                    holdings[crypto.symbol]['total_units'] += Decimal(str(transaction.units))
+                    holdings[crypto.symbol]['total_investment'] += Decimal(str(transaction.investment_amount))
                 else:  # sell
-                    holdings[crypto.symbol]['total_units'] -= float(transaction.units)
-                    holdings[crypto.symbol]['total_investment'] -= float(transaction.investment_amount)
+                    holdings[crypto.symbol]['total_units'] -= Decimal(str(transaction.units))
+                    holdings[crypto.symbol]['total_investment'] -= Decimal(str(transaction.investment_amount))
 
             # Update crypto prices and calculate current values
             for symbol, holding in holdings.items():
-                if holding['total_units'] > 0:  # Only show active holdings
+                if holding['total_units'] > Decimal('0'):  # Only show active holdings
                     crypto = Cryptocurrency.query.filter_by(symbol=symbol).first()
                     # Update price before calculating values
                     crypto.update_price()
                     
-                    current_value = holding['total_units'] * float(crypto.current_price)
+                    current_price_decimal = Decimal(str(crypto.current_price))
+                    current_value = holding['total_units'] * current_price_decimal
                     avg_purchase_price = holding['total_investment'] / holding['total_units']
-                    price_change_since_purchase = float(crypto.current_price) - avg_purchase_price
+                    price_change_since_purchase = current_price_decimal - avg_purchase_price
                     
                     holding.update({
-                        'current_price': float(crypto.current_price),
+                        'current_price': current_price_decimal,
                         'current_value': current_value,
                         'profit_loss': current_value - holding['total_investment'],
-                        'profit_loss_percentage': ((current_value - holding['total_investment']) / holding['total_investment']) * 100,
-                        'price_change_percentage_24h': float(crypto.price_change_percentage_24h or 0),
-                        'price_change_percentage_since_purchase': (price_change_since_purchase / avg_purchase_price) * 100
+                        'profit_loss_percentage': ((current_value - holding['total_investment']) / holding['total_investment'] * Decimal('100')),
+                        'price_change_percentage_24h': Decimal(str(crypto.price_change_percentage_24h or '0')),
+                        'price_change_percentage_since_purchase': (price_change_since_purchase / avg_purchase_price * Decimal('100'))
                     })
                     portfolio.append(holding)
             
