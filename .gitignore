@@ -26,10 +26,11 @@ ENV/
 env/
 
 # Environment files
-
 .env.local
 .env.production
-.env.*.local
+.env.development
+.env.*
+!.env.example
 
 # IDE
 .idea/
