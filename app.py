@@ -11,6 +11,8 @@ import os
 import requests
 import logging
 from logging.handlers import RotatingFileHandler
+from decimal import Decimal
+from pathlib import Path
 
 # Flask app configuration
 app = Flask(__name__)
@@ -19,13 +21,37 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'your-secure-secret-key-here')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Database configuration for Namecheap
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'mysql://root:@localhost/crypto_portfolio')
+# Database configuration with environment-based setup
+def get_database_url():
+    # Get the username from the current path for Namecheap hosting
+    try:
+        current_path = Path(__file__).resolve()
+        if len(current_path.parts) >= 3 and current_path.parts[1] == 'home':
+            # We're in a hosting environment
+            return os.environ.get('DATABASE_URL')
+    except Exception as e:
+        app.logger.warning(f"Error detecting environment: {str(e)}")
+    
+    # Local development environment
+    DB_USER = os.environ.get('MYSQL_USER', 'root')
+    DB_PASSWORD = os.environ.get('MYSQL_PASSWORD', '')
+    DB_HOST = os.environ.get('MYSQL_HOST', 'localhost')
+    DB_NAME = os.environ.get('MYSQL_DATABASE', 'crypto_portfolio')
+    
+    # Log which configuration is being used (without sensitive data)
+    app.logger.info(f"Using local database configuration: mysql://{DB_USER}@{DB_HOST}/{DB_NAME}")
+    
+    return f"mysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
+
+# Set the database URI based on environment
+app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url()
 
 # Production settings
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    "pool_pre_ping": True,
-    "pool_recycle": 300,
+    "pool_pre_ping": True,  # Enable automatic reconnection
+    "pool_recycle": 300,    # Recycle connections every 5 minutes
+    "pool_timeout": 20,     # Connection timeout of 20 seconds
+    "max_overflow": 5       # Allow 5 connections above pool size
 }
 app.config['SESSION_COOKIE_SECURE'] = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
@@ -70,6 +96,12 @@ def inject_site_config():
         'app_version': os.getenv('APP_VERSION', '1.0.0')
     }
 
+# Add custom template filters
+@app.template_filter('rstrip')
+def rstrip_filter(s, chars=None):
+    """Template filter to right strip characters"""
+    return str(s).rstrip(chars)
+
 # Models
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -78,68 +110,94 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
+    cash_balance = db.Column(db.Numeric(20, 2), nullable=False, default=0)  # Store cash balance with 2 decimal places
     transactions = db.relationship('Transaction', backref='user', lazy=True)
+    cash_transactions = db.relationship('CashTransaction', backref='user', lazy=True)
 
 class Cryptocurrency(db.Model):
     __tablename__ = 'cryptocurrencies'
     id = db.Column(db.Integer, primary_key=True)
     symbol = db.Column(db.String(10), unique=True, nullable=False)
     name = db.Column(db.String(100), nullable=False)
-    current_price = db.Column(db.Float, nullable=False)
-    price_24h_ago = db.Column(db.Float, nullable=True)
-    price_change_24h = db.Column(db.Float, nullable=True)
-    price_change_percentage_24h = db.Column(db.Float, nullable=True)
+    current_price = db.Column(db.Numeric(20, 10), nullable=False)  # Up to 10 decimal places
+    price_24h_ago = db.Column(db.Numeric(20, 10), nullable=True)  # Up to 10 decimal places
+    price_change_24h = db.Column(db.Numeric(20, 10), nullable=True)  # Up to 10 decimal places
+    price_change_percentage_24h = db.Column(db.Numeric(10, 2), nullable=True)  # Percentage stays at 2 decimals
     last_updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     transactions = db.relationship('Transaction', backref='cryptocurrency', lazy=True)
 
     def update_price(self):
         try:
             # Using CoinGecko API to get current price and 24h change
+            app.logger.info(f"Updating price for {self.symbol} ({self.name})")
             response = requests.get(
                 f'https://api.coingecko.com/api/v3/simple/price?ids={self.name.lower()}&vs_currencies=usd&include_24hr_change=true',
-                headers={'accept': 'application/json'}
+                headers={'accept': 'application/json'},
+                timeout=10  # Add timeout
             )
             
             # Handle rate limiting
             if response.status_code == 429:  # Too Many Requests
-                print(f"Rate limited when updating {self.symbol}. Waiting before retry...")
-                return False
+                app.logger.warning(f"Rate limited when updating {self.symbol}. Waiting before retry...")
+                return False, "Rate limit exceeded. Please try again later."
                 
             if response.status_code == 200:
                 data = response.json()
+                if self.name.lower() not in data:
+                    app.logger.error(f"Cryptocurrency {self.name} not found in CoinGecko response")
+                    return False, f"Cryptocurrency {self.name} not found in CoinGecko"
+                    
                 coin_data = data[self.name.lower()]
-                new_price = coin_data['usd']
+                new_price = Decimal(str(coin_data['usd']))  # Convert to Decimal
                 
                 # Store the current price as price_24h_ago before updating
                 if self.current_price != new_price:
                     self.price_24h_ago = self.current_price
                     self.current_price = new_price
+                    # Ensure both values are Decimal for subtraction
                     self.price_change_24h = new_price - (self.price_24h_ago or new_price)
-                    self.price_change_percentage_24h = coin_data.get('usd_24h_change', 0)
+                    # Convert percentage to Decimal
+                    self.price_change_percentage_24h = Decimal(str(coin_data.get('usd_24h_change', 0)))
                     self.last_updated = datetime.utcnow()
                     db.session.commit()
-                    print(f"Updated {self.symbol} price to ${new_price} (24h change: {self.price_change_percentage_24h:.2f}%)")
-                return True
+                    app.logger.info(f"Updated {self.symbol} price to ${new_price} (24h change: {self.price_change_percentage_24h:.2f}%)")
+                return True, None
             else:
-                print(f"Error updating {self.symbol}: HTTP {response.status_code}")
-                return False
+                error_msg = f"Error updating {self.symbol}: HTTP {response.status_code}"
+                app.logger.error(error_msg)
+                return False, error_msg
+        except requests.exceptions.Timeout:
+            error_msg = f"Timeout while updating price for {self.symbol}"
+            app.logger.error(error_msg)
+            return False, error_msg
         except Exception as e:
-            print(f"Error updating price for {self.symbol}: {str(e)}")
-            return False
+            error_msg = f"Error updating price for {self.symbol}: {str(e)}"
+            app.logger.error(error_msg)
+            db.session.rollback()
+            return False, error_msg
 
 class Transaction(db.Model):
     __tablename__ = 'transactions'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     crypto_id = db.Column(db.Integer, db.ForeignKey('cryptocurrencies.id'), nullable=False)
-    investment_amount = db.Column(db.Float, nullable=False)  # Amount in USD
-    price_at_time = db.Column(db.Float, nullable=False)  # Price of crypto at transaction time
-    units = db.Column(db.Float, nullable=False)  # Calculated based on investment_amount and price
+    investment_amount = db.Column(db.Numeric(20, 2), nullable=False)  # Amount in USD (2 decimals)
+    price_at_time = db.Column(db.Numeric(20, 10), nullable=False)  # Price with 10 decimals
+    units = db.Column(db.Numeric(30, 10), nullable=False)  # Units with 10 decimals
     transaction_type = db.Column(db.String(4), nullable=False)  # 'buy' or 'sell'
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     def calculate_units(self):
         self.units = self.investment_amount / self.price_at_time
+
+class CashTransaction(db.Model):
+    __tablename__ = 'cash_transactions'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    amount = db.Column(db.Numeric(20, 2), nullable=False)  # Positive for deposits, negative for withdrawals
+    transaction_type = db.Column(db.String(10), nullable=False)  # 'deposit' or 'withdrawal'
+    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    notes = db.Column(db.String(200))
 
 # Function to initialize cryptocurrencies
 def init_cryptocurrencies():
@@ -277,11 +335,11 @@ def dashboard():
                     }
                 
                 if transaction.transaction_type == 'buy':
-                    holdings[crypto.symbol]['total_units'] += transaction.units
-                    holdings[crypto.symbol]['total_investment'] += transaction.investment_amount
+                    holdings[crypto.symbol]['total_units'] += float(transaction.units)
+                    holdings[crypto.symbol]['total_investment'] += float(transaction.investment_amount)
                 else:  # sell
-                    holdings[crypto.symbol]['total_units'] -= transaction.units
-                    holdings[crypto.symbol]['total_investment'] -= transaction.investment_amount
+                    holdings[crypto.symbol]['total_units'] -= float(transaction.units)
+                    holdings[crypto.symbol]['total_investment'] -= float(transaction.investment_amount)
 
             # Update crypto prices and calculate current values
             for symbol, holding in holdings.items():
@@ -290,16 +348,16 @@ def dashboard():
                     # Update price before calculating values
                     crypto.update_price()
                     
-                    current_value = holding['total_units'] * crypto.current_price
+                    current_value = holding['total_units'] * float(crypto.current_price)
                     avg_purchase_price = holding['total_investment'] / holding['total_units']
-                    price_change_since_purchase = crypto.current_price - avg_purchase_price
+                    price_change_since_purchase = float(crypto.current_price) - avg_purchase_price
                     
                     holding.update({
-                        'current_price': crypto.current_price,
+                        'current_price': float(crypto.current_price),
                         'current_value': current_value,
                         'profit_loss': current_value - holding['total_investment'],
                         'profit_loss_percentage': ((current_value - holding['total_investment']) / holding['total_investment']) * 100,
-                        'price_change_percentage_24h': crypto.price_change_percentage_24h,
+                        'price_change_percentage_24h': float(crypto.price_change_percentage_24h or 0),
                         'price_change_percentage_since_purchase': (price_change_since_purchase / avg_purchase_price) * 100
                     })
                     portfolio.append(holding)
@@ -312,7 +370,7 @@ def dashboard():
         app.logger.error(f"Error in dashboard route: {str(e)}", exc_info=True)
         db.session.rollback()
         flash('An error occurred while loading the dashboard')
-        return redirect(url_for('error_handler'))
+        return redirect(url_for('index'))
 
 @app.route('/admin')
 @login_required
@@ -386,10 +444,24 @@ def transaction():
             
             user_id = request.form.get('user_id')
             crypto_id = request.form.get('crypto_id')
-            investment_amount = float(request.form.get('investment_amount'))
+            investment_amount = Decimal(request.form.get('investment_amount'))
             transaction_type = request.form.get('transaction_type')
             
             app.logger.info(f'Creating new transaction: user_id={user_id}, crypto_id={crypto_id}, amount={investment_amount}, type={transaction_type}')
+            
+            # Get the user and check their balance
+            user = User.query.get(user_id)
+            if not user:
+                app.logger.error(f'Invalid user ID: {user_id}')
+                flash('Invalid user selected')
+                return redirect(url_for('transaction'))
+
+            # For buy transactions, check if user has sufficient balance
+            if transaction_type == 'buy':
+                if user.cash_balance < investment_amount:
+                    app.logger.warning(f'Insufficient funds: User {user.username} has ${user.cash_balance} but needs ${investment_amount}')
+                    flash(f'Insufficient funds. Available balance: ${user.cash_balance}')
+                    return redirect(url_for('transaction'))
             
             # Get the cryptocurrency and its current price
             crypto = Cryptocurrency.query.get(crypto_id)
@@ -413,7 +485,28 @@ def transaction():
             # Calculate the number of units
             new_transaction.calculate_units()
             
+            # For sell transactions, check if user has enough units
+            if transaction_type == 'sell':
+                # Calculate total units owned
+                total_units = Decimal('0')
+                for tx in Transaction.query.filter_by(user_id=user_id, crypto_id=crypto_id).all():
+                    if tx.transaction_type == 'buy':
+                        total_units += tx.units
+                    else:
+                        total_units -= tx.units
+                
+                if total_units < new_transaction.units:
+                    app.logger.warning(f'Insufficient crypto units: User has {total_units} but wants to sell {new_transaction.units}')
+                    flash(f'Insufficient {crypto.symbol} units. Available: {total_units}')
+                    return redirect(url_for('transaction'))
+            
             app.logger.info(f'Transaction details: price={crypto.current_price}, units={new_transaction.units}')
+            
+            # Update user's cash balance
+            if transaction_type == 'buy':
+                user.cash_balance -= investment_amount
+            else:  # sell
+                user.cash_balance += investment_amount
             
             db.session.add(new_transaction)
             db.session.commit()
@@ -620,11 +713,21 @@ def cryptocurrency_update_price(id):
     
     try:
         crypto = Cryptocurrency.query.get_or_404(id)
-        success = crypto.update_price()
-        return jsonify({'success': success})
+        success, error_message = crypto.update_price()
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'price': crypto.current_price,
+                'last_updated': crypto.last_updated.strftime('%Y-%m-%d %H:%M:%S UTC'),
+                'price_change_24h': crypto.price_change_percentage_24h
+            })
+        else:
+            return jsonify({'success': False, 'message': error_message}), 500
     except Exception as e:
-        print(f"Error: {str(e)}")
-        return jsonify({'success': False, 'message': 'Error updating price'}), 500
+        app.logger.error(f"Error in cryptocurrency_update_price: {str(e)}", exc_info=True)
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/api/prices', methods=['GET'])
 @login_required
@@ -735,6 +838,54 @@ def reset_user_password(user_id):
         db.session.rollback()
         flash('An error occurred while resetting the password')
         return redirect(url_for('admin'))
+
+@app.route('/admin/cash_transaction', methods=['GET', 'POST'])
+@login_required
+def cash_transaction():
+    if not current_user.is_admin:
+        flash('Access denied. Admin privileges required.')
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        try:
+            user_id = request.form.get('user_id')
+            amount = Decimal(request.form.get('amount'))
+            transaction_type = request.form.get('transaction_type')
+            notes = request.form.get('notes')
+            
+            user = User.query.get(user_id)
+            if not user:
+                flash('Invalid user selected')
+                return redirect(url_for('cash_transaction'))
+            
+            # Convert amount to negative for withdrawals
+            actual_amount = amount if transaction_type == 'deposit' else -amount
+            
+            # Create cash transaction
+            transaction = CashTransaction(
+                user_id=user_id,
+                amount=actual_amount,
+                transaction_type=transaction_type,
+                notes=notes
+            )
+            
+            # Update user's cash balance
+            user.cash_balance = user.cash_balance + actual_amount
+            
+            db.session.add(transaction)
+            db.session.commit()
+            
+            flash(f'Cash {transaction_type} processed successfully')
+            return redirect(url_for('admin'))
+            
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f'Error processing cash transaction: {str(e)}')
+            flash('Error processing cash transaction')
+            return redirect(url_for('cash_transaction'))
+    
+    users = User.query.filter_by(is_admin=False).all()
+    return render_template('cash_transaction.html', users=users)
 
 # Add this at the bottom of the file
 if __name__ == '__main__':

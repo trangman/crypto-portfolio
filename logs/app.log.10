@@ -1,125 +1,85 @@
-2025-02-05 09:34:35,652 INFO: Application startup [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:63]
-2025-02-05 09:34:35,653 INFO: SITE_URL: https://investmenttracker.com [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:66]
-2025-02-05 09:34:35,653 INFO: DB_HOST: localhost [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:67]
-2025-02-05 09:34:35,653 INFO: DB_NAME: crypto_portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:68]
-2025-02-05 09:34:35,659 INFO: Testing database connection... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:565]
-2025-02-05 09:34:35,659 ERROR: Database initialization error: Textual SQL expression 'SELECT 1' should be explicitly declared as text('SELECT 1') [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:580]
-Traceback (most recent call last):
-  File "C:\Users\msphu\OneDrive\dev\fin2025\app.py", line 566, in <module>
-    db.session.execute('SELECT 1')
-    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\orm\scoping.py", line 779, in execute
-    return self._proxied.execute(
-           ~~~~~~~~~~~~~~~~~~~~~^
-        statement,
-        ^^^^^^^^^^
-    ...<4 lines>...
-        _add_event=_add_event,
-        ^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2365, in execute
-    return self._execute_internal(
-           ~~~~~~~~~~~~~~~~~~~~~~^
-        statement,
-        ^^^^^^^^^^
-    ...<4 lines>...
-        _add_event=_add_event,
-        ^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2149, in _execute_internal
-    statement = coercions.expect(roles.StatementRole, statement)
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\sql\coercions.py", line 395, in expect
-    resolved = impl._literal_coercion(
-        element, argname=argname, **kw
-    )
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\sql\coercions.py", line 621, in _literal_coercion
-    return self._text_coercion(element, argname, **kw)
-           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\sql\coercions.py", line 614, in _text_coercion
-    return _no_text_coercion(element, argname)
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\sql\coercions.py", line 584, in _no_text_coercion
-    raise exc_cls(
-    ...<7 lines>...
-    ) from err
-sqlalchemy.exc.ArgumentError: Textual SQL expression 'SELECT 1' should be explicitly declared as text('SELECT 1')
-2025-02-05 09:35:02,560 INFO: Application startup [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:63]
-2025-02-05 09:35:02,561 INFO: SITE_URL: https://investmenttracker.com [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:66]
-2025-02-05 09:35:02,561 INFO: DB_HOST: localhost [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:67]
-2025-02-05 09:35:02,561 INFO: DB_NAME: crypto_portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:68]
-2025-02-05 09:35:02,567 INFO: Testing database connection... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:565]
-2025-02-05 09:35:02,575 INFO: Database connection successful [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:568]
-2025-02-05 09:35:02,575 INFO: Checking database tables... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:571]
-2025-02-05 09:35:02,579 INFO: Database tables verified [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:573]
-2025-02-05 09:35:02,580 INFO: Checking cryptocurrencies... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:576]
-2025-02-05 09:35:02,591 INFO: Cryptocurrency initialization complete [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:578]
-2025-02-05 09:35:03,041 INFO: Application startup [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:63]
-2025-02-05 09:35:03,041 INFO: SITE_URL: https://investmenttracker.com [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:66]
-2025-02-05 09:35:03,041 INFO: DB_HOST: localhost [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:67]
-2025-02-05 09:35:03,041 INFO: DB_NAME: your_database_name [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:68]
-2025-02-05 09:35:03,047 INFO: Testing database connection... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:565]
-2025-02-05 09:35:03,054 INFO: Database connection successful [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:568]
-2025-02-05 09:35:03,055 INFO: Checking database tables... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:571]
-2025-02-05 09:35:03,059 INFO: Database tables verified [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:573]
-2025-02-05 09:35:03,059 INFO: Checking cryptocurrencies... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:576]
-2025-02-05 09:35:03,072 INFO: Cryptocurrency initialization complete [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:578]
-2025-02-05 09:35:54,755 INFO: Fetching users for admin page [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:296]
-2025-02-05 09:35:54,756 INFO: Successfully fetched 2 users [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:299]
-2025-02-05 09:35:54,765 ERROR: Admin page error: Could not build url for endpoint 'change_admin_password'. Did you mean 'dashboard' instead? [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:304]
-Traceback (most recent call last):
-  File "C:\Users\msphu\OneDrive\dev\fin2025\app.py", line 301, in admin
-    return render_template('admin.html', users=users_list)
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\flask\templating.py", line 150, in render_template
-    return _render(app, template, context)
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\flask\templating.py", line 131, in _render
-    rv = template.render(context)
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\jinja2\environment.py", line 1295, in render
-    self.environment.handle_exception()
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
-    raise rewrite_traceback_stack(source=source)
-  File "C:\Users\msphu\OneDrive\dev\fin2025\templates\admin.html", line 1, in top-level template code
-    {% extends "base.html" %}
-  File "C:\Users\msphu\OneDrive\dev\fin2025\templates\base.html", line 111, in top-level template code
-    {% block content %}{% endblock %}
-    ^^^^^^^^^^^^^
-  File "C:\Users\msphu\OneDrive\dev\fin2025\templates\admin.html", line 15, in block 'content'
-    <a href="{{ url_for('change_admin_password') }}"
-    ^^^^^
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\flask\app.py", line 1074, in url_for
-    return self.handle_url_build_error(error, endpoint, values)
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\flask\app.py", line 1063, in url_for
-    rv = url_adapter.build(  # type: ignore[union-attr]
-        endpoint,
-    ...<3 lines>...
-        force_external=_external,
-    )
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\werkzeug\routing\map.py", line 919, in build
-    raise BuildError(endpoint, values, method, self)
-werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'change_admin_password'. Did you mean 'dashboard' instead?
-2025-02-05 09:37:53,666 INFO: Application startup [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:63]
-2025-02-05 09:37:53,666 INFO: SITE_URL: https://your-domain.com [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:66]
-2025-02-05 09:37:53,666 INFO: DB_HOST: localhost [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:67]
-2025-02-05 09:37:53,666 INFO: DB_NAME: your_database_name [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:68]
-2025-02-05 09:37:53,672 INFO: Testing database connection... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:659]
-2025-02-05 09:37:53,678 INFO: Database connection successful [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:662]
-2025-02-05 09:37:53,678 INFO: Checking database tables... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:665]
-2025-02-05 09:37:53,682 INFO: Database tables verified [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:667]
-2025-02-05 09:37:53,682 INFO: Checking cryptocurrencies... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:670]
-2025-02-05 09:37:53,693 INFO: Cryptocurrency initialization complete [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:672]
-2025-02-05 09:38:28,921 INFO: Fetching users for admin page [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:295]
-2025-02-05 09:38:28,922 INFO: Successfully fetched 2 users [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:299]
-2025-02-05 09:49:03,918 INFO: Application startup [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:63]
-2025-02-05 09:49:03,918 INFO: SITE_URL: https://your-domain.com [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:66]
-2025-02-05 09:49:03,918 INFO: DB_HOST: localhost [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:67]
-2025-02-05 09:49:03,918 INFO: DB_NAME: your_database_name [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:68]
-2025-02-05 09:49:03,924 INFO: Testing database connection... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:659]
-2025-02-05 09:49:03,932 INFO: Database connection successful [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:662]
-2025-02-05 09:49:03,932 INFO: Checking database tables... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:665]
-2025-02-05 09:49:03,936 INFO: Database tables verified [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:667]
-2025-02-05 09:49:03,936 INFO: Checking cryptocurrencies... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:670]
-2025-02-05 09:49:03,947 INFO: Cryptocurrency initialization complete [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:672]
-2025-02-05 09:49:53,104 WARNING: Failed login attempt for email: elon@mail.com [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:219]
-2025-02-05 09:50:28,972 WARNING: Failed login attempt for email: elon@mail.com [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:219]
+2025-02-05 10:51:31,087 INFO: Application startup [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:56]
+2025-02-05 10:51:31,089 INFO: SITE_URL: https://your-domain.com [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:59]
+2025-02-05 10:51:31,089 INFO: Database URL: mysql://root:@localhost/crypto_portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:60]
+2025-02-05 10:51:31,095 INFO: Testing database connection... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:727]
+2025-02-05 10:51:31,102 INFO: Database connection successful [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:730]
+2025-02-05 10:51:31,102 INFO: Checking database tables... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:733]
+2025-02-05 10:51:31,106 INFO: Database tables verified [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:735]
+2025-02-05 10:51:31,107 INFO: Checking cryptocurrencies... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:738]
+2025-02-05 10:51:31,119 INFO: Cryptocurrency initialization complete [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:740]
+2025-02-05 10:51:47,220 INFO: Fetching users for admin page [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:318]
+2025-02-05 10:51:47,222 INFO: Successfully fetched 2 users [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:322]
+2025-02-05 10:55:07,106 INFO: Application startup [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:56]
+2025-02-05 10:55:07,106 INFO: SITE_URL: https://your-domain.com [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:59]
+2025-02-05 10:55:07,106 INFO: Database URL: mysql://root:@localhost/crypto_portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:60]
+2025-02-05 10:55:07,112 INFO: Testing database connection... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:727]
+2025-02-05 10:55:07,119 INFO: Database connection successful [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:730]
+2025-02-05 10:55:07,119 INFO: Checking database tables... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:733]
+2025-02-05 10:55:07,123 INFO: Database tables verified [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:735]
+2025-02-05 10:55:07,123 INFO: Checking cryptocurrencies... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:738]
+2025-02-05 10:55:07,136 INFO: Cryptocurrency initialization complete [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:740]
+2025-02-05 10:56:52,116 INFO: Application startup [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:56]
+2025-02-05 10:56:52,116 INFO: SITE_URL: https://your-domain.com [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:59]
+2025-02-05 10:56:52,116 INFO: Database URL: mysql://root:@localhost/crypto_portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:60]
+2025-02-05 10:56:52,122 INFO: Testing database connection... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:741]
+2025-02-05 10:56:52,129 INFO: Database connection successful [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:744]
+2025-02-05 10:56:52,129 INFO: Checking database tables... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:747]
+2025-02-05 10:56:52,133 INFO: Database tables verified [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:749]
+2025-02-05 10:56:52,133 INFO: Checking cryptocurrencies... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:752]
+2025-02-05 10:56:52,145 INFO: Cryptocurrency initialization complete [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:754]
+2025-02-05 11:04:17,611 INFO: Application startup [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:56]
+2025-02-05 11:04:17,611 INFO: SITE_URL: https://your-domain.com [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:59]
+2025-02-05 11:04:17,611 INFO: Database URL: mysql://root:@localhost/crypto_portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:60]
+2025-02-05 11:04:17,617 INFO: Testing database connection... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:744]
+2025-02-05 11:04:17,623 INFO: Database connection successful [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:747]
+2025-02-05 11:04:17,624 INFO: Checking database tables... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:750]
+2025-02-05 11:04:17,627 INFO: Database tables verified [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:752]
+2025-02-05 11:04:17,628 INFO: Checking cryptocurrencies... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:755]
+2025-02-05 11:04:17,639 INFO: Cryptocurrency initialization complete [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:757]
+2025-02-05 11:04:33,084 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:242]
+2025-02-05 11:04:33,085 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:246]
+2025-02-05 11:04:33,089 INFO: Admin dashboard: Found 1 total transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:252]
+2025-02-05 11:04:33,089 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:256]
+2025-02-05 11:04:44,011 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:242]
+2025-02-05 11:04:44,012 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:246]
+2025-02-05 11:04:44,013 INFO: Admin dashboard: Found 1 total transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:252]
+2025-02-05 11:04:44,013 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:256]
+2025-02-05 11:04:47,616 INFO: Fetching users for admin page [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:329]
+2025-02-05 11:04:47,618 INFO: Successfully fetched 2 users [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:331]
+2025-02-05 11:04:47,619 INFO: Direct SQL query shows 1 transactions in database [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:337]
+2025-02-05 11:04:47,620 INFO: Fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:340]
+2025-02-05 11:04:47,621 INFO: Successfully fetched 1 transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:345]
+2025-02-05 11:04:47,622 INFO: Transaction details: [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:349]
+2025-02-05 11:04:47,622 INFO: Transaction: ID=1, User=Elon Musk, Type=buy, Crypto=BTC, Amount=5000.00, Units=0.0511, Timestamp=2025-02-05 03:23:42 [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:352]
+2025-02-05 11:04:52,697 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:242]
+2025-02-05 11:04:52,698 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:246]
+2025-02-05 11:04:52,699 INFO: Admin dashboard: Found 1 total transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:252]
+2025-02-05 11:04:52,699 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:256]
+2025-02-05 11:06:40,497 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:242]
+2025-02-05 11:06:40,497 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:246]
+2025-02-05 11:06:40,499 INFO: Admin dashboard: Found 1 total transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:252]
+2025-02-05 11:06:40,499 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:256]
+2025-02-05 11:06:52,369 INFO: Fetching users for admin page [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:329]
+2025-02-05 11:06:52,370 INFO: Successfully fetched 2 users [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:331]
+2025-02-05 11:06:52,371 INFO: Direct SQL query shows 1 transactions in database [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:337]
+2025-02-05 11:06:52,371 INFO: Fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:340]
+2025-02-05 11:06:52,372 INFO: Successfully fetched 1 transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:345]
+2025-02-05 11:06:52,372 INFO: Transaction details: [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:349]
+2025-02-05 11:06:52,373 INFO: Transaction: ID=1, User=Elon Musk, Type=buy, Crypto=BTC, Amount=5000.00, Units=0.0511, Timestamp=2025-02-05 03:23:42 [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:352]
+2025-02-05 11:06:57,415 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:242]
+2025-02-05 11:06:57,415 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:246]
+2025-02-05 11:06:57,417 INFO: Admin dashboard: Found 1 total transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:252]
+2025-02-05 11:06:57,417 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:256]
+2025-02-05 11:08:50,246 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:242]
+2025-02-05 11:08:50,246 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:246]
+2025-02-05 11:08:50,248 INFO: Admin dashboard: Found 1 total transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:252]
+2025-02-05 11:08:50,248 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:256]
+2025-02-05 11:09:04,560 INFO: Application startup [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:56]
+2025-02-05 11:09:04,561 INFO: SITE_URL: https://your-domain.com [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:59]
+2025-02-05 11:09:04,561 INFO: Database URL: mysql://root:@localhost/crypto_portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:60]
+2025-02-05 11:09:04,567 INFO: Testing database connection... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:744]
+2025-02-05 11:09:04,573 INFO: Database connection successful [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:747]
+2025-02-05 11:09:04,573 INFO: Checking database tables... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:750]
+2025-02-05 11:09:04,577 INFO: Database tables verified [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:752]
+2025-02-05 11:09:04,577 INFO: Checking cryptocurrencies... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:755]
+2025-02-05 11:09:04,589 INFO: Cryptocurrency initialization complete [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:757]

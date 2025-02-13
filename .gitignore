@@ -24,7 +24,12 @@ wheels/
 venv/
 ENV/
 env/
+
+# Environment files
 .env
+.env.local
+.env.production
+.env.*.local
 
 # IDE
 .idea/
@@ -38,6 +43,7 @@ env/
 
 # Logs
 *.log
+logs/
 
 # OS
 .DS_Store
