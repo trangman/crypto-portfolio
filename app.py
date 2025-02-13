@@ -12,6 +12,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from decimal import Decimal
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Flask app configuration
 app = Flask(__name__)
@@ -20,8 +21,28 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'your-secure-secret-key-here')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Set database URI directly from environment
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+# Database configuration with environment-based setup
+def get_database_url():
+    # For local development using .env.local
+    if os.path.exists('.env.local'):
+        load_dotenv('.env.local')
+    # For production using .env
+    elif os.path.exists('.env'):
+        load_dotenv('.env')
+
+    # Get database configuration
+    if 'DATABASE_URL' in os.environ:
+        return os.environ.get('DATABASE_URL')
+    else:
+        # Construct URL from individual settings
+        db_user = os.environ.get('MYSQL_USER', 'root')
+        db_password = os.environ.get('MYSQL_PASSWORD', '')
+        db_host = os.environ.get('MYSQL_HOST', 'localhost')
+        db_name = os.environ.get('MYSQL_DATABASE', 'crypto_portfolio')
+        return f'mysql://{db_user}:{db_password}@{db_host}/{db_name}'
+
+# Set the database URI
+app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url()
 
 # Production settings
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
