@@ -849,13 +849,33 @@ def cash_transaction():
     if request.method == 'POST':
         try:
             user_id = request.form.get('user_id')
-            amount = Decimal(str(request.form.get('amount')))  # Convert to Decimal immediately
+            amount_str = request.form.get('amount')
             transaction_type = request.form.get('transaction_type')
             notes = request.form.get('notes')
+            
+            # Validate required fields
+            if not user_id or not amount_str or not transaction_type:
+                flash('Please fill in all required fields')
+                return redirect(url_for('cash_transaction'))
+            
+            # Validate and convert amount
+            try:
+                amount = Decimal(str(amount_str))
+                if amount <= 0:
+                    flash('Amount must be greater than 0')
+                    return redirect(url_for('cash_transaction'))
+            except (TypeError, ValueError, InvalidOperation):
+                flash('Invalid amount entered')
+                return redirect(url_for('cash_transaction'))
             
             user = User.query.get(user_id)
             if not user:
                 flash('Invalid user selected')
+                return redirect(url_for('cash_transaction'))
+            
+            # For withdrawals, check if user has sufficient balance
+            if transaction_type == 'withdrawal' and user.cash_balance < amount:
+                flash(f'Insufficient funds. Available balance: ${user.cash_balance}')
                 return redirect(url_for('cash_transaction'))
             
             # Convert amount to negative for withdrawals
@@ -870,7 +890,8 @@ def cash_transaction():
             )
             
             # Update user's cash balance using Decimal
-            user.cash_balance = Decimal(str(user.cash_balance)) + actual_amount
+            current_balance = Decimal('0') if user.cash_balance is None else Decimal(str(user.cash_balance))
+            user.cash_balance = current_balance + actual_amount
             
             db.session.add(transaction)
             db.session.commit()
@@ -880,7 +901,7 @@ def cash_transaction():
             
         except Exception as e:
             db.session.rollback()
-            app.logger.error(f'Error processing cash transaction: {str(e)}')
+            app.logger.error(f'Error processing cash transaction: {str(e)}', exc_info=True)
             flash('Error processing cash transaction')
             return redirect(url_for('cash_transaction'))
     
