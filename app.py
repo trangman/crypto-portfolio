@@ -22,41 +22,17 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Database configuration with environment-based setup
 def get_database_url():
-    # Get the username from the current path for Namecheap hosting
-    try:
-        current_path = Path(__file__).resolve()
-        if len(current_path.parts) >= 3 and current_path.parts[1] == 'home':
-            # We're in a hosting environment
-            db_url = os.environ.get('DATABASE_URL')
-            if db_url:
-                app.logger.info("Using production database configuration")
-                return db_url
-            else:
-                app.logger.error("DATABASE_URL not set in production environment")
-                raise ValueError("DATABASE_URL environment variable is required in production")
-    except Exception as e:
-        app.logger.warning(f"Error detecting environment: {str(e)}")
-    
-    # Local development environment
-    DB_USER = os.environ.get('MYSQL_USER', 'root')
-    DB_PASSWORD = os.environ.get('MYSQL_PASSWORD', '')
-    DB_HOST = os.environ.get('MYSQL_HOST', 'localhost')
-    DB_NAME = os.environ.get('MYSQL_DATABASE', 'crypto_portfolio')
-    
-    # Log which configuration is being used (without sensitive data)
-    app.logger.info(f"Using local database configuration: mysql://{DB_USER}@{DB_HOST}/{DB_NAME}")
-    
-    return f"mysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
+    return os.environ.get('DATABASE_URL', 'mysql://username:password@localhost/dbname')
 
-# Set the database URI based on environment
+# Set the database URI
 app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url()
 
 # Production settings
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    "pool_pre_ping": True,  # Enable automatic reconnection
-    "pool_recycle": 300,    # Recycle connections every 5 minutes
-    "pool_timeout": 20,     # Connection timeout of 20 seconds
-    "max_overflow": 5       # Allow 5 connections above pool size
+    "pool_pre_ping": True,
+    "pool_recycle": 300,
+    "pool_timeout": 20,
+    "max_overflow": 5
 }
 app.config['SESSION_COOKIE_SECURE'] = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
