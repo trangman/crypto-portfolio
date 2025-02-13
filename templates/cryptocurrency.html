@@ -67,7 +67,7 @@
                             </td>
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <button data-action="update" data-id="{{ crypto.id }}" class="text-indigo-600 hover:text-indigo-900">Update Price</button>
-                                <a href="{{ url_for('cryptocurrency_edit', id=crypto.id) }}" class="ml-4 text-indigo-600 hover:text-indigo-900">Edit</a>
+                                <button data-action="edit" data-id="{{ crypto.id }}" class="ml-4 text-indigo-600 hover:text-indigo-900">Edit</button>
                                 <button data-action="delete" data-id="{{ crypto.id }}" class="ml-4 text-red-600 hover:text-red-900">Delete</button>
                             </td>
                         </tr>
@@ -112,21 +112,20 @@
 </div>
 
 <script>
-    function editCrypto(id) {
+    function editCrypto(button, id) {
         const modal = document.getElementById('editModal');
         const form = document.getElementById('editForm');
         const symbolInput = document.getElementById('edit_symbol');
         const nameInput = document.getElementById('edit_name');
-        const idInput = document.getElementById('edit_id');
 
-        // Get current values
-        const symbol = document.getElementById(`symbol-${id}`).textContent;
-        const name = document.getElementById(`name-${id}`).textContent;
+        // Get current values from the row
+        const row = button.closest('tr');
+        const name = row.querySelector('td:nth-child(1)').textContent.trim();
+        const symbol = row.querySelector('td:nth-child(2)').textContent.trim();
 
         // Set form values
         symbolInput.value = symbol;
         nameInput.value = name;
-        idInput.value = id;
 
         // Set form action
         form.action = `/cryptocurrency/${id}/edit`;
@@ -170,6 +169,8 @@
                 updatePrice(button, id);
             } else if (action === 'delete') {
                 deleteCryptocurrency(button, id);
+            } else if (action === 'edit') {
+                editCrypto(button, id);
             }
         });
     });
