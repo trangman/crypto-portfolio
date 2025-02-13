@@ -20,12 +20,8 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'your-secure-secret-key-here')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Database configuration with environment-based setup
-def get_database_url():
-    return os.environ.get('DATABASE_URL', 'mysql://username:password@localhost/dbname')
-
-# Set the database URI
-app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url()
+# Set database URI directly from environment
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 
 # Production settings
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
