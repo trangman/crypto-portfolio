@@ -67,7 +67,7 @@
                             </td>
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <button data-action="update" data-id="{{ crypto.id }}" class="text-indigo-600 hover:text-indigo-900">Update Price</button>
-                                <a href="{{ url_for('edit_cryptocurrency', id=crypto.id) }}" class="ml-4 text-indigo-600 hover:text-indigo-900">Edit</a>
+                                <a href="{{ url_for('cryptocurrency_edit', id=crypto.id) }}" class="ml-4 text-indigo-600 hover:text-indigo-900">Edit</a>
                                 <button data-action="delete" data-id="{{ crypto.id }}" class="ml-4 text-red-600 hover:text-red-900">Delete</button>
                             </td>
                         </tr>
