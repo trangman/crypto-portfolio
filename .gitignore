@@ -29,8 +29,7 @@ env/
 .env.local
 .env.production
 .env.development
-.env.*
-!.env.example
+.env.*.local
 
 # IDE
 .idea/
