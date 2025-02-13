@@ -602,14 +602,20 @@ def register():
 def cryptocurrency_list():
     try:
         if not current_user.is_admin:
+            app.logger.warning('Non-admin user %s attempted to access cryptocurrency management', current_user.username)
             flash('Access denied. Admin privileges required.')
             return redirect(url_for('dashboard'))
             
+        app.logger.info('Loading cryptocurrencies for admin user %s', current_user.username)
         cryptocurrencies = Cryptocurrency.query.all()
+        app.logger.info('Found %d cryptocurrencies', len(cryptocurrencies))
+        
         return render_template('cryptocurrency.html', cryptocurrencies=cryptocurrencies)
         
     except Exception as e:
-        app.logger.error('Cryptocurrency page error: %s', str(e), exc_info=True)
+        app.logger.error('Cryptocurrency page error for user %s: %s', 
+                        current_user.username if current_user else 'unknown',
+                        str(e), exc_info=True)
         db.session.rollback()
         flash('An error occurred while loading the cryptocurrency page')
         return redirect(url_for('admin'))
