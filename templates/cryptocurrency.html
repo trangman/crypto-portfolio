@@ -55,8 +55,8 @@
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ crypto.name }}</td>
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ crypto.symbol }}</td>
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ "%.10f"|format(crypto.current_price)|rstrip('0')|rstrip('.') }}</td>
-                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm {% if crypto.price_change_24h > 0 %}text-green-600{% else %}text-red-600{% endif %}">
-                                {{ "%.2f"|format(crypto.price_change_24h) }}%
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm {% if crypto.price_change_24h and crypto.price_change_24h > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                                {{ "%.2f"|format(crypto.price_change_24h or 0) }}%
                             </td>
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {% if crypto.last_updated %}
