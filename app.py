@@ -1082,8 +1082,11 @@ def stock_transaction():
         user = User.query.get_or_404(user_id)
         stock = Stock.query.get_or_404(stock_id)
 
+        # Convert cash_balance to Decimal for comparison
+        current_balance = Decimal(str(user.cash_balance)) if user.cash_balance is not None else Decimal('0')
+
         # Validate transaction
-        if transaction_type == 'buy' and investment_amount > user.cash_balance:
+        if transaction_type == 'buy' and investment_amount > current_balance:
             flash('Insufficient funds for this transaction.', 'error')
             return redirect(url_for('stock_transaction'))
 
@@ -1103,9 +1106,9 @@ def stock_transaction():
 
         # Update user's cash balance
         if transaction_type == 'buy':
-            user.cash_balance -= investment_amount
+            user.cash_balance = current_balance - investment_amount
         else:
-            user.cash_balance += investment_amount
+            user.cash_balance = current_balance + investment_amount
 
         try:
             db.session.add(transaction)
