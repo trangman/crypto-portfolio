@@ -12,13 +12,21 @@
                         class="block w-full text-center bg-primary-500 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded transition duration-150">
                         Manage Cryptocurrencies
                     </a>
+                    <a href="{{ url_for('stock_list') }}"
+                        class="block w-full text-center bg-primary-500 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded transition duration-150">
+                        Manage Stocks
+                    </a>
                     <a href="{{ url_for('register') }}"
                         class="block w-full text-center bg-primary-500 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded transition duration-150">
                         Create New Client
                     </a>
                     <a href="{{ url_for('transaction') }}"
                         class="block w-full text-center bg-primary-500 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded transition duration-150">
-                        Add Transaction
+                        Add Crypto Transaction
+                    </a>
+                    <a href="{{ url_for('stock_transaction') }}"
+                        class="block w-full text-center bg-primary-500 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded transition duration-150">
+                        Add Stock Transaction
                     </a>
                     <a href="{{ url_for('cash_transaction') }}"
                         class="block w-full text-center bg-primary-500 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded transition duration-150">
@@ -35,7 +43,7 @@
                 <div class="space-y-2 sm:space-y-3">
                     <p class="text-gray-600">Total Clients: {{ users|selectattr('is_admin', 'eq', false)|list|length }}</p>
                     <p class="text-gray-600">Active Admins: {{ users|selectattr('is_admin', 'eq', true)|list|length }}</p>
-                    <p class="text-gray-600">Total Transactions: {{ transactions|length }}</p>
+                    <p class="text-gray-600">Total Transactions: {{ transactions|length + stock_transactions|length }}</p>
                 </div>
             </div>
         </div>
@@ -111,7 +119,7 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    {% if transactions or cash_transactions %}
+                    {% if transactions or stock_transactions or cash_transactions %}
                         {% for transaction in transactions %}
                         <tr>
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
@@ -122,7 +130,7 @@
                             </td>
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if transaction.transaction_type == 'buy' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
-                                    {{ transaction.transaction_type.upper() }}
+                                    {{ transaction.transaction_type.upper() }} CRYPTO
                                 </span>
                             </td>
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
@@ -136,6 +144,36 @@
                             </td>
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900">${{ "%.2f"|format(transaction.price_at_time or 0) }}</div>
+                            </td>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">-</div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% for transaction in stock_transactions %}
+                        <tr>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ transaction.timestamp.strftime('%Y-%m-%d %H:%M') }}</div>
+                            </td>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ transaction.user.username }}</div>
+                            </td>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if transaction.transaction_type == 'buy' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ transaction.transaction_type.upper() }} STOCK
+                                </span>
+                            </td>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ transaction.stock.symbol }}</div>
+                            </td>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">${{ "%.2f"|format(transaction.investment_amount or 0) }}</div>
+                            </td>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ "%.4f"|format(transaction.units or 0) }}</div>
+                            </td>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">${{ "%.2f"|format(transaction.price_at_time or 0) }}{% if transaction.manual_price %} (M){% endif %}</div>
                             </td>
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900">-</div>

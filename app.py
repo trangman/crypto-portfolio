@@ -26,20 +26,25 @@ def get_database_url():
     # For local development using .env.local
     if os.path.exists('.env.local'):
         load_dotenv('.env.local')
-    # For production using .env
-    elif os.path.exists('.env'):
-        load_dotenv('.env')
-
-    # Get database configuration
-    if 'DATABASE_URL' in os.environ:
-        return os.environ.get('DATABASE_URL')
-    else:
-        # Construct URL from individual settings
+        # Construct URL from individual settings for local development
         db_user = os.environ.get('MYSQL_USER', 'root')
         db_password = os.environ.get('MYSQL_PASSWORD', '')
         db_host = os.environ.get('MYSQL_HOST', 'localhost')
         db_name = os.environ.get('MYSQL_DATABASE', 'crypto_portfolio')
         return f'mysql://{db_user}:{db_password}@{db_host}/{db_name}'
+    # For production using .env
+    elif os.path.exists('.env'):
+        load_dotenv('.env')
+        if 'DATABASE_URL' in os.environ:
+            return os.environ.get('DATABASE_URL')
+        else:
+            # Fallback to constructing URL from individual settings
+            db_user = os.environ.get('MYSQL_USER', 'root')
+            db_password = os.environ.get('MYSQL_PASSWORD', '')
+            db_host = os.environ.get('MYSQL_HOST', 'localhost')
+            db_name = os.environ.get('MYSQL_DATABASE', 'crypto_portfolio')
+            return f'mysql://{db_user}:{db_password}@{db_host}/{db_name}'
+    return 'mysql://root:@localhost/crypto_portfolio'  # Default fallback for development
 
 # Set the database URI
 app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url()
@@ -110,6 +115,7 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     cash_balance = db.Column(db.Numeric(20, 2), nullable=False, default=0)  # Store cash balance with 2 decimal places
     transactions = db.relationship('Transaction', backref='user', lazy=True)
+    stock_transactions = db.relationship('StockTransaction', backref='user', lazy=True)
     cash_transactions = db.relationship('CashTransaction', backref='user', lazy=True)
 
 class Cryptocurrency(db.Model):
@@ -197,6 +203,77 @@ class CashTransaction(db.Model):
     transaction_type = db.Column(db.String(10), nullable=False)  # 'deposit' or 'withdrawal'
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     notes = db.Column(db.String(200))
+
+class Stock(db.Model):
+    __tablename__ = 'stocks'
+    id = db.Column(db.Integer, primary_key=True)
+    symbol = db.Column(db.String(10), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    current_price = db.Column(db.Numeric(20, 2), nullable=False)  # Stock prices typically need 2 decimal places
+    price_24h_ago = db.Column(db.Numeric(20, 2), nullable=True)
+    price_change_24h = db.Column(db.Numeric(20, 2), nullable=True)
+    price_change_percentage_24h = db.Column(db.Numeric(10, 2), nullable=True)
+    last_updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    transactions = db.relationship('StockTransaction', backref='stock', lazy=True)
+
+    def update_price(self):
+        try:
+            api_key = os.environ.get('ALPHA_VANTAGE_API_KEY')
+            if not api_key:
+                return False, "Alpha Vantage API key not configured"
+
+            app.logger.info(f"Updating price for stock {self.symbol}")
+            response = requests.get(
+                f'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={self.symbol}&apikey={api_key}',
+                timeout=10
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                if 'Global Quote' not in data or not data['Global Quote']:
+                    app.logger.error(f"Stock {self.symbol} not found in Alpha Vantage response")
+                    return False, f"Stock {self.symbol} not found"
+
+                quote = data['Global Quote']
+                new_price = Decimal(str(quote['05. price']))
+                
+                if self.current_price != new_price:
+                    self.price_24h_ago = self.current_price
+                    self.current_price = new_price
+                    self.price_change_24h = Decimal(str(quote['09. change']))
+                    self.price_change_percentage_24h = Decimal(str(quote['10. change percent'].rstrip('%')))
+                    self.last_updated = datetime.utcnow()
+                    db.session.commit()
+                    app.logger.info(f"Updated {self.symbol} price to ${new_price} (24h change: {self.price_change_percentage_24h}%)")
+                return True, None
+            else:
+                error_msg = f"Error updating {self.symbol}: HTTP {response.status_code}"
+                app.logger.error(error_msg)
+                return False, error_msg
+
+        except requests.exceptions.Timeout:
+            error_msg = f"Timeout while updating price for {self.symbol}"
+            app.logger.error(error_msg)
+            return False, error_msg
+        except Exception as e:
+            error_msg = f"Error updating price for {self.symbol}: {str(e)}"
+            app.logger.error(error_msg)
+            return False, error_msg
+
+class StockTransaction(db.Model):
+    __tablename__ = 'stock_transactions'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    stock_id = db.Column(db.Integer, db.ForeignKey('stocks.id'), nullable=False)
+    investment_amount = db.Column(db.Numeric(20, 2), nullable=False)  # Amount in USD
+    price_at_time = db.Column(db.Numeric(20, 2), nullable=False)  # Price with 2 decimals
+    units = db.Column(db.Numeric(20, 4), nullable=False)  # Units with 4 decimals for stocks
+    transaction_type = db.Column(db.String(4), nullable=False)  # 'buy' or 'sell'
+    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    manual_price = db.Column(db.Boolean, default=False)  # Flag to indicate if price was manually set
+
+    def calculate_units(self):
+        self.units = self.investment_amount / self.price_at_time
 
 # Function to initialize cryptocurrencies
 def init_cryptocurrencies():
@@ -375,60 +452,20 @@ def dashboard():
 @app.route('/admin')
 @login_required
 def admin():
-    try:
-        if not current_user.is_admin:
-            app.logger.warning('Non-admin user attempted to access admin page: %s', current_user.username)
-            flash('Access denied. Admin privileges required.')
-            return redirect(url_for('dashboard'))
-        
-        # Ensure we have a fresh database session
-        db.session.rollback()
-        
-        app.logger.info('Fetching users for admin page')
-        users = User.query.all()
-        app.logger.info('Successfully fetched %d users', len(users))
-        
-        # Direct SQL query to check transactions
-        from sqlalchemy import text
-        result = db.session.execute(text('SELECT COUNT(*) FROM transactions'))
-        count = result.scalar()
-        app.logger.info('Direct SQL query shows %d transactions in database', count)
-        
-        # Fetch all transactions with eager loading of relationships
-        app.logger.info('Fetching all transactions')
-        transactions = Transaction.query.options(
-            db.joinedload(Transaction.user),
-            db.joinedload(Transaction.cryptocurrency)
-        ).order_by(Transaction.timestamp.desc()).all()
-        app.logger.info('Successfully fetched %d transactions', len(transactions))
-        
-        # Log transaction details for debugging
-        if transactions:
-            app.logger.info('Transaction details:')
-            for transaction in transactions:
-                try:
-                    app.logger.info(
-                        'Transaction: ID=%d, User=%s, Type=%s, Crypto=%s, Amount=%.2f, Units=%.4f, Timestamp=%s', 
-                        transaction.id,
-                        transaction.user.username,
-                        transaction.transaction_type,
-                        transaction.cryptocurrency.symbol,
-                        transaction.investment_amount,
-                        transaction.units,
-                        transaction.timestamp.strftime('%Y-%m-%d %H:%M:%S')
-                    )
-                except Exception as e:
-                    app.logger.error('Error logging transaction details: %s', str(e))
-        else:
-            app.logger.warning('No transactions found in database')
-            
-        return render_template('admin.html', users=users, transactions=transactions)
-        
-    except Exception as e:
-        app.logger.error('Admin page error: %s', str(e), exc_info=True)
-        db.session.rollback()
-        flash('An error occurred while loading the admin page')
+    if not current_user.is_admin:
+        flash('Access denied.', 'error')
         return redirect(url_for('dashboard'))
+    
+    users = User.query.all()
+    transactions = Transaction.query.order_by(Transaction.timestamp.desc()).all()
+    stock_transactions = StockTransaction.query.order_by(StockTransaction.timestamp.desc()).all()
+    cash_transactions = CashTransaction.query.order_by(CashTransaction.timestamp.desc()).all()
+    
+    return render_template('admin.html', 
+                         users=users, 
+                         transactions=transactions,
+                         stock_transactions=stock_transactions,
+                         cash_transactions=cash_transactions)
 
 @app.route('/transaction', methods=['GET', 'POST'])
 @login_required
@@ -913,6 +950,178 @@ def cash_transaction():
     
     users = User.query.filter_by(is_admin=False).all()
     return render_template('cash_transaction.html', users=users)
+
+@app.route('/stocks')
+@login_required
+def stock_list():
+    if not current_user.is_admin:
+        flash('Access denied.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    stocks = Stock.query.all()
+    return render_template('stocks.html', stocks=stocks)
+
+@app.route('/stock/add', methods=['POST'])
+@login_required
+def stock_add():
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+
+    symbol = request.form.get('symbol', '').strip().upper()
+    name = request.form.get('name', '').strip()
+
+    if not symbol or not name:
+        flash('Symbol and name are required.', 'error')
+        return redirect(url_for('stock_list'))
+
+    existing = Stock.query.filter_by(symbol=symbol).first()
+    if existing:
+        flash(f'Stock with symbol {symbol} already exists.', 'error')
+        return redirect(url_for('stock_list'))
+
+    stock = Stock(symbol=symbol, name=name, current_price=0)
+    db.session.add(stock)
+    success, error = stock.update_price()
+    
+    if success:
+        db.session.commit()
+        flash(f'Stock {symbol} added successfully.', 'success')
+    else:
+        db.session.rollback()
+        flash(f'Error adding stock: {error}', 'error')
+
+    return redirect(url_for('stock_list'))
+
+@app.route('/stock/<int:id>/edit', methods=['POST'])
+@login_required
+def stock_edit(id):
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+
+    stock = Stock.query.get_or_404(id)
+    symbol = request.form.get('symbol', '').strip().upper()
+    name = request.form.get('name', '').strip()
+
+    if not symbol or not name:
+        flash('Symbol and name are required.', 'error')
+        return redirect(url_for('stock_list'))
+
+    existing = Stock.query.filter(Stock.symbol == symbol, Stock.id != id).first()
+    if existing:
+        flash(f'Stock with symbol {symbol} already exists.', 'error')
+        return redirect(url_for('stock_list'))
+
+    stock.symbol = symbol
+    stock.name = name
+    success, error = stock.update_price()
+
+    if success:
+        db.session.commit()
+        flash(f'Stock {symbol} updated successfully.', 'success')
+    else:
+        db.session.rollback()
+        flash(f'Error updating stock: {error}', 'error')
+
+    return redirect(url_for('stock_list'))
+
+@app.route('/stock/<int:id>/delete', methods=['POST'])
+@login_required
+def stock_delete(id):
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+
+    stock = Stock.query.get_or_404(id)
+    
+    try:
+        db.session.delete(stock)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error deleting stock: {str(e)}')
+        return jsonify({'success': False, 'message': 'Error deleting stock'})
+
+@app.route('/stock/<int:id>/update_price', methods=['POST'])
+@login_required
+def stock_update_price(id):
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+
+    stock = Stock.query.get_or_404(id)
+    success, error = stock.update_price()
+
+    if success:
+        return jsonify({
+            'success': True,
+            'price': float(stock.current_price),
+            'price_change_24h': float(stock.price_change_percentage_24h or 0),
+            'last_updated': stock.last_updated.strftime('%Y-%m-%d %H:%M:%S')
+        })
+    else:
+        return jsonify({'success': False, 'message': error})
+
+@app.route('/stock_transaction', methods=['GET', 'POST'])
+@login_required
+def stock_transaction():
+    if not current_user.is_admin:
+        flash('Access denied.', 'error')
+        return redirect(url_for('dashboard'))
+
+    if request.method == 'POST':
+        user_id = request.form.get('user_id', type=int)
+        stock_id = request.form.get('stock_id', type=int)
+        transaction_type = request.form.get('transaction_type')
+        investment_amount = Decimal(request.form.get('investment_amount', '0'))
+        use_manual_price = request.form.get('use_manual_price') == 'on'
+        manual_price = Decimal(request.form.get('manual_price', '0')) if use_manual_price else None
+
+        if not all([user_id, stock_id, transaction_type, investment_amount > 0]):
+            flash('All fields are required and investment amount must be positive.', 'error')
+            return redirect(url_for('stock_transaction'))
+
+        user = User.query.get_or_404(user_id)
+        stock = Stock.query.get_or_404(stock_id)
+
+        # Validate transaction
+        if transaction_type == 'buy' and investment_amount > user.cash_balance:
+            flash('Insufficient funds for this transaction.', 'error')
+            return redirect(url_for('stock_transaction'))
+
+        # Get price for transaction
+        price_at_time = manual_price if use_manual_price else stock.current_price
+
+        # Create transaction
+        transaction = StockTransaction(
+            user_id=user_id,
+            stock_id=stock_id,
+            transaction_type=transaction_type,
+            investment_amount=investment_amount,
+            price_at_time=price_at_time,
+            manual_price=use_manual_price
+        )
+        transaction.calculate_units()
+
+        # Update user's cash balance
+        if transaction_type == 'buy':
+            user.cash_balance -= investment_amount
+        else:
+            user.cash_balance += investment_amount
+
+        try:
+            db.session.add(transaction)
+            db.session.commit()
+            flash(f'Stock transaction completed successfully.', 'success')
+            return redirect(url_for('admin'))
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f'Error processing stock transaction: {str(e)}')
+            flash('Error processing transaction.', 'error')
+            return redirect(url_for('stock_transaction'))
+
+    # GET request - show form
+    users = User.query.filter(User.id != current_user.id).all()
+    stocks = Stock.query.all()
+    return render_template('stock_transaction.html', users=users, stocks=stocks)
 
 # Add this at the bottom of the file
 if __name__ == '__main__':
