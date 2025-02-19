@@ -1119,7 +1119,7 @@ def stock_transaction():
             return redirect(url_for('stock_transaction'))
 
     # GET request - show form
-    users = User.query.filter(User.id != current_user.id).all()
+    users = User.query.filter_by(is_admin=False).all()
     stocks = Stock.query.all()
     return render_template('stock_transaction.html', users=users, stocks=stocks)
 
