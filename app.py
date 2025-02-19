@@ -382,28 +382,39 @@ def dashboard():
                 db.joinedload(Transaction.user),
                 db.joinedload(Transaction.cryptocurrency)
             ).order_by(Transaction.timestamp.desc()).all()
+            stock_transactions = StockTransaction.query.options(
+                db.joinedload(StockTransaction.user),
+                db.joinedload(StockTransaction.stock)
+            ).order_by(StockTransaction.timestamp.desc()).all()
             
-            app.logger.info(f'Admin dashboard: Found {len(transactions)} total transactions')
+            app.logger.info(f'Admin dashboard: Found {len(transactions)} crypto transactions and {len(stock_transactions)} stock transactions')
             
             # Empty portfolio for admin users
-            portfolio = []
+            crypto_portfolio = []
+            stock_portfolio = []
             app.logger.info('Admin user - setting empty portfolio')
         else:
             app.logger.info('Regular user detected - fetching user transactions')
             transactions = Transaction.query.filter_by(user_id=current_user.id).options(
                 db.joinedload(Transaction.cryptocurrency)
             ).order_by(Transaction.timestamp.desc()).all()
+            stock_transactions = StockTransaction.query.filter_by(user_id=current_user.id).options(
+                db.joinedload(StockTransaction.stock)
+            ).order_by(StockTransaction.timestamp.desc()).all()
             
-            app.logger.info(f'User dashboard: Found {len(transactions)} transactions for user {current_user.username}')
+            app.logger.info(f'User dashboard: Found {len(transactions)} crypto transactions and {len(stock_transactions)} stock transactions for user {current_user.username}')
             
             # Calculate portfolio holdings for regular users
-            portfolio = []
-            holdings = {}
+            crypto_portfolio = []
+            stock_portfolio = []
+            crypto_holdings = {}
+            stock_holdings = {}
             
+            # Process cryptocurrency transactions
             for transaction in transactions:
                 crypto = transaction.cryptocurrency
-                if crypto.symbol not in holdings:
-                    holdings[crypto.symbol] = {
+                if crypto.symbol not in crypto_holdings:
+                    crypto_holdings[crypto.symbol] = {
                         'symbol': crypto.symbol,
                         'name': crypto.name,
                         'total_units': Decimal('0'),
@@ -411,14 +422,32 @@ def dashboard():
                     }
                 
                 if transaction.transaction_type == 'buy':
-                    holdings[crypto.symbol]['total_units'] += Decimal(str(transaction.units))
-                    holdings[crypto.symbol]['total_investment'] += Decimal(str(transaction.investment_amount))
+                    crypto_holdings[crypto.symbol]['total_units'] += Decimal(str(transaction.units))
+                    crypto_holdings[crypto.symbol]['total_investment'] += Decimal(str(transaction.investment_amount))
                 else:  # sell
-                    holdings[crypto.symbol]['total_units'] -= Decimal(str(transaction.units))
-                    holdings[crypto.symbol]['total_investment'] -= Decimal(str(transaction.investment_amount))
+                    crypto_holdings[crypto.symbol]['total_units'] -= Decimal(str(transaction.units))
+                    crypto_holdings[crypto.symbol]['total_investment'] -= Decimal(str(transaction.investment_amount))
+
+            # Process stock transactions
+            for transaction in stock_transactions:
+                stock = transaction.stock
+                if stock.symbol not in stock_holdings:
+                    stock_holdings[stock.symbol] = {
+                        'symbol': stock.symbol,
+                        'name': stock.name,
+                        'total_units': Decimal('0'),
+                        'total_investment': Decimal('0')
+                    }
+                
+                if transaction.transaction_type == 'buy':
+                    stock_holdings[stock.symbol]['total_units'] += Decimal(str(transaction.units))
+                    stock_holdings[stock.symbol]['total_investment'] += Decimal(str(transaction.investment_amount))
+                else:  # sell
+                    stock_holdings[stock.symbol]['total_units'] -= Decimal(str(transaction.units))
+                    stock_holdings[stock.symbol]['total_investment'] -= Decimal(str(transaction.investment_amount))
 
             # Update crypto prices and calculate current values
-            for symbol, holding in holdings.items():
+            for symbol, holding in crypto_holdings.items():
                 if holding['total_units'] > Decimal('0'):  # Only show active holdings
                     crypto = Cryptocurrency.query.filter_by(symbol=symbol).first()
                     # Update price before calculating values
@@ -437,12 +466,38 @@ def dashboard():
                         'price_change_percentage_24h': Decimal(str(crypto.price_change_percentage_24h or '0')),
                         'price_change_percentage_since_purchase': (price_change_since_purchase / avg_purchase_price * Decimal('100'))
                     })
-                    portfolio.append(holding)
+                    crypto_portfolio.append(holding)
+
+            # Update stock prices and calculate current values
+            for symbol, holding in stock_holdings.items():
+                if holding['total_units'] > Decimal('0'):  # Only show active holdings
+                    stock = Stock.query.filter_by(symbol=symbol).first()
+                    # Update price before calculating values
+                    stock.update_price()
+                    
+                    current_price_decimal = Decimal(str(stock.current_price))
+                    current_value = holding['total_units'] * current_price_decimal
+                    avg_purchase_price = holding['total_investment'] / holding['total_units']
+                    price_change_since_purchase = current_price_decimal - avg_purchase_price
+                    
+                    holding.update({
+                        'current_price': current_price_decimal,
+                        'current_value': current_value,
+                        'profit_loss': current_value - holding['total_investment'],
+                        'profit_loss_percentage': ((current_value - holding['total_investment']) / holding['total_investment'] * Decimal('100')),
+                        'price_change_percentage_24h': Decimal(str(stock.price_change_percentage_24h or '0')),
+                        'price_change_percentage_since_purchase': (price_change_since_purchase / avg_purchase_price * Decimal('100'))
+                    })
+                    stock_portfolio.append(holding)
             
             # Commit the price updates
             db.session.commit()
 
-        return render_template('dashboard.html', transactions=transactions, portfolio=portfolio)
+        return render_template('dashboard.html', 
+                            transactions=transactions,
+                            stock_transactions=stock_transactions,
+                            crypto_portfolio=crypto_portfolio,
+                            stock_portfolio=stock_portfolio)
     except Exception as e:
         app.logger.error(f"Error in dashboard route: {str(e)}", exc_info=True)
         db.session.rollback()

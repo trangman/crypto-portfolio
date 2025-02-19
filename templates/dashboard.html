@@ -20,13 +20,13 @@
     </div>
 
     {% if not current_user.is_admin %}
-    <!-- Portfolio Section (Only for non-admin users) -->
+    <!-- Cryptocurrency Portfolio Section -->
     <div class="bg-white rounded-lg shadow-md mb-8">
         <div class="px-4 sm:px-6 py-4 bg-primary-50 border-b border-primary-100">
-            <h2 class="text-lg sm:text-xl font-semibold text-primary-900">Your Portfolio</h2>
+            <h2 class="text-lg sm:text-xl font-semibold text-primary-900">Your Cryptocurrency Portfolio</h2>
         </div>
         <div class="p-4 sm:p-6">
-            {% if portfolio %}
+            {% if crypto_portfolio %}
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-primary-50">
@@ -41,7 +41,7 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        {% for holding in portfolio %}
+                        {% for holding in crypto_portfolio %}
                         <tr>
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ holding.symbol }}</td>
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.10f"|format(holding.total_units or 0)|rstrip('0')|rstrip('.') }}</td>
@@ -60,7 +60,52 @@
                 </table>
             </div>
             {% else %}
-            <p class="text-gray-600">No active holdings in your portfolio.</p>
+            <p class="text-gray-600">No active cryptocurrency holdings in your portfolio.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Stock Portfolio Section -->
+    <div class="bg-white rounded-lg shadow-md mb-8">
+        <div class="px-4 sm:px-6 py-4 bg-primary-50 border-b border-primary-100">
+            <h2 class="text-lg sm:text-xl font-semibold text-primary-900">Your Stock Portfolio</h2>
+        </div>
+        <div class="p-4 sm:p-6">
+            {% if stock_portfolio %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-primary-50">
+                        <tr>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-primary-800 uppercase tracking-wider">Stock</th>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-primary-800 uppercase tracking-wider">Holdings</th>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-primary-800 uppercase tracking-wider">Avg Purchase Price</th>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-primary-800 uppercase tracking-wider">Current Price</th>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-primary-800 uppercase tracking-wider">24h Change</th>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-primary-800 uppercase tracking-wider">Total Value</th>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-primary-800 uppercase tracking-wider">Profit/Loss</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for holding in stock_portfolio %}
+                        <tr>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ holding.symbol }}</td>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.4f"|format(holding.total_units or 0)|rstrip('0')|rstrip('.') }}</td>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ "%.2f"|format((holding.total_investment or 0) / (holding.total_units or 1))|rstrip('0')|rstrip('.') }}</td>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ "%.2f"|format(holding.current_price or 0)|rstrip('0')|rstrip('.') }}</td>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm {% if (holding.price_change_percentage_24h or 0) > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                                {{ "%.2f"|format(holding.price_change_percentage_24h or 0) }}%
+                            </td>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ "%.2f"|format(holding.current_value or 0) }}</td>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm {% if (holding.profit_loss or 0) > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                                ${{ "%.2f"|format(holding.profit_loss or 0) }} ({{ "%.2f"|format(holding.profit_loss_percentage or 0) }}%)
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-gray-600">No active stock holdings in your portfolio.</p>
             {% endif %}
         </div>
     </div>
@@ -74,7 +119,7 @@
             </div>
         </div>
         <div class="p-4 sm:p-6">
-            {% if transactions %}
+            {% if transactions or stock_transactions %}
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-primary-50">
@@ -84,7 +129,7 @@
                             <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-primary-800 uppercase tracking-wider">Client</th>
                             {% endif %}
                             <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-primary-800 uppercase tracking-wider">Type</th>
-                            <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-primary-800 uppercase tracking-wider">Cryptocurrency</th>
+                            <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-primary-800 uppercase tracking-wider">Asset</th>
                             <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-primary-800 uppercase tracking-wider">Amount</th>
                             <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-primary-800 uppercase tracking-wider">Units</th>
                             <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-primary-800 uppercase tracking-wider">Price</th>
@@ -99,13 +144,30 @@
                             {% endif %}
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if transaction.transaction_type == 'buy' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
-                                    {{ transaction.transaction_type.upper() }}
+                                    {{ transaction.transaction_type.upper() }} CRYPTO
                                 </span>
                             </td>
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ transaction.cryptocurrency.symbol }}</td>
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ "%.2f"|format(transaction.investment_amount or 0) }}</td>
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.10f"|format(transaction.units or 0)|rstrip('0')|rstrip('.') }}</td>
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ "%.10f"|format(transaction.price_at_time or 0)|rstrip('0')|rstrip('.') }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% for transaction in stock_transactions %}
+                        <tr>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ transaction.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            {% if current_user.is_admin %}
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ transaction.user.username }}</td>
+                            {% endif %}
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if transaction.transaction_type == 'buy' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ transaction.transaction_type.upper() }} STOCK
+                                </span>
+                            </td>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ transaction.stock.symbol }}</td>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ "%.2f"|format(transaction.investment_amount or 0) }}</td>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.4f"|format(transaction.units or 0)|rstrip('0')|rstrip('.') }}</td>
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ "%.2f"|format(transaction.price_at_time or 0)|rstrip('0')|rstrip('.') }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
