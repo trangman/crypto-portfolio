@@ -142,13 +142,21 @@ class Cryptocurrency(db.Model):
             
             # Handle rate limiting
             if response.status_code == 429:  # Too Many Requests
-                app.logger.warning(f"Rate limited when updating {self.symbol}. Waiting before retry...")
+                app.logger.warning(f"Rate limited when updating {self.symbol}. Using last known price.")
+                # If we have a current price, use it rather than failing
+                if self.current_price:
+                    app.logger.info(f"Using last known price for {self.symbol}: ${self.current_price}")
+                    return True, None
                 return False, "Rate limit exceeded. Please try again later."
                 
             if response.status_code == 200:
                 data = response.json()
                 if self.name.lower() not in data:
                     app.logger.error(f"Cryptocurrency {self.name} not found in CoinGecko response")
+                    # If we have a current price, use it rather than failing
+                    if self.current_price:
+                        app.logger.info(f"Using last known price for {self.symbol}: ${self.current_price}")
+                        return True, None
                     return False, f"Cryptocurrency {self.name} not found in CoinGecko"
                     
                 coin_data = data[self.name.lower()]
@@ -171,14 +179,26 @@ class Cryptocurrency(db.Model):
             else:
                 error_msg = f"Error updating {self.symbol}: HTTP {response.status_code}"
                 app.logger.error(error_msg)
+                # If we have a current price, use it rather than failing
+                if self.current_price:
+                    app.logger.info(f"Using last known price for {self.symbol}: ${self.current_price}")
+                    return True, None
                 return False, error_msg
         except requests.exceptions.Timeout:
             error_msg = f"Timeout while updating price for {self.symbol}"
             app.logger.error(error_msg)
+            # If we have a current price, use it rather than failing
+            if self.current_price:
+                app.logger.info(f"Using last known price for {self.symbol}: ${self.current_price}")
+                return True, None
             return False, error_msg
         except Exception as e:
             error_msg = f"Error updating price for {self.symbol}: {str(e)}"
             app.logger.error(error_msg)
+            # If we have a current price, use it rather than failing
+            if self.current_price:
+                app.logger.info(f"Using last known price for {self.symbol}: ${self.current_price}")
+                return True, None
             return False, error_msg
 
 class Transaction(db.Model):
@@ -193,7 +213,10 @@ class Transaction(db.Model):
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     def calculate_units(self):
-        self.units = self.investment_amount / self.price_at_time
+        # Convert both values to Decimal if they aren't already
+        investment_amount_decimal = Decimal(str(self.investment_amount))
+        price_at_time_decimal = Decimal(str(self.price_at_time))
+        self.units = investment_amount_decimal / price_at_time_decimal
 
 class CashTransaction(db.Model):
     __tablename__ = 'cash_transactions'
@@ -299,16 +322,46 @@ def init_cryptocurrencies():
             new_crypto = Cryptocurrency(
                 symbol=crypto['symbol'],
                 name=crypto['name'],
-                current_price=0.0
+                current_price=Decimal('0'),
+                price_24h_ago=Decimal('0'),
+                price_change_24h=Decimal('0'),
+                price_change_percentage_24h=Decimal('0')
             )
             db.session.add(new_crypto)
-            new_crypto.update_price()
-            print(f"Added {crypto['symbol']} with price ${new_crypto.current_price}")
-        else:
-            print(f"{crypto['symbol']} already exists")
+            db.session.commit()
+            print(f"Added {crypto['symbol']}")
+
+def init_stocks():
+    print("Initializing stocks...")
+    stocks = [
+        {'symbol': 'AAPL', 'name': 'Apple Inc.'},
+        {'symbol': 'MSFT', 'name': 'Microsoft Corporation'},
+        {'symbol': 'GOOGL', 'name': 'Alphabet Inc.'},
+        {'symbol': 'AMZN', 'name': 'Amazon.com Inc.'},
+        {'symbol': 'NVDA', 'name': 'NVIDIA Corporation'},
+        {'symbol': 'META', 'name': 'Meta Platforms Inc.'},
+        {'symbol': 'TSLA', 'name': 'Tesla Inc.'},
+        {'symbol': 'JPM', 'name': 'JPMorgan Chase & Co.'},
+        {'symbol': 'V', 'name': 'Visa Inc.'},
+        {'symbol': 'WMT', 'name': 'Walmart Inc.'}
+    ]
     
-    db.session.commit()
-    print("Cryptocurrency initialization complete")
+    for stock in stocks:
+        print(f"Checking {stock['symbol']}...")
+        existing = Stock.query.filter_by(symbol=stock['symbol']).first()
+        if not existing:
+            print(f"Adding {stock['symbol']}...")
+            new_stock = Stock(
+                symbol=stock['symbol'],
+                name=stock['name'],
+                current_price=Decimal('0'),
+                price_24h_ago=Decimal('0'),
+                price_change_24h=Decimal('0'),
+                price_change_percentage_24h=Decimal('0')
+            )
+            db.session.add(new_stock)
+            db.session.commit()
+            print(f"Added {stock['symbol']}")
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -550,9 +603,10 @@ def transaction():
 
             # For buy transactions, check if user has sufficient balance
             if transaction_type == 'buy':
-                if user.cash_balance < investment_amount:
-                    app.logger.warning(f'Insufficient funds: User {user.username} has ${user.cash_balance} but needs ${investment_amount}')
-                    flash(f'Insufficient funds. Available balance: ${user.cash_balance}')
+                current_balance = Decimal(str(user.cash_balance))
+                if current_balance < investment_amount:
+                    app.logger.warning(f'Insufficient funds: User {user.username} has ${current_balance} but needs ${investment_amount}')
+                    flash(f'Insufficient funds. Available balance: ${current_balance}')
                     return redirect(url_for('transaction'))
             
             # Get the cryptocurrency and its current price
@@ -563,14 +617,18 @@ def transaction():
                 return redirect(url_for('transaction'))
             
             # Update crypto price before creating transaction
-            crypto.update_price()
+            success, error = crypto.update_price()
+            if not success:
+                app.logger.error(f'Failed to update price for {crypto.symbol}: {error}')
+                flash(f'Error updating cryptocurrency price: {error}')
+                return redirect(url_for('transaction'))
             
-            # Create new transaction
+            # Create new transaction with price as Decimal
             new_transaction = Transaction(
                 user_id=user_id,
                 crypto_id=crypto_id,
                 investment_amount=investment_amount,
-                price_at_time=crypto.current_price,
+                price_at_time=Decimal(str(crypto.current_price)),
                 transaction_type=transaction_type
             )
             
@@ -583,9 +641,9 @@ def transaction():
                 total_units = Decimal('0')
                 for tx in Transaction.query.filter_by(user_id=user_id, crypto_id=crypto_id).all():
                     if tx.transaction_type == 'buy':
-                        total_units += tx.units
+                        total_units += Decimal(str(tx.units))
                     else:
-                        total_units -= tx.units
+                        total_units -= Decimal(str(tx.units))
                 
                 if total_units < new_transaction.units:
                     app.logger.warning(f'Insufficient crypto units: User has {total_units} but wants to sell {new_transaction.units}')
@@ -596,9 +654,9 @@ def transaction():
             
             # Update user's cash balance
             if transaction_type == 'buy':
-                user.cash_balance -= investment_amount
+                user.cash_balance = current_balance - investment_amount
             else:  # sell
-                user.cash_balance += investment_amount
+                user.cash_balance = Decimal(str(user.cash_balance)) + investment_amount
             
             db.session.add(new_transaction)
             db.session.commit()
@@ -1200,6 +1258,11 @@ if __name__ == '__main__':
             app.logger.info('Checking cryptocurrencies...')
             init_cryptocurrencies()
             app.logger.info('Cryptocurrency initialization complete')
+            
+            # Initialize stocks
+            app.logger.info('Checking stocks...')
+            init_stocks()
+            app.logger.info('Stock initialization complete')
             
         except Exception as e:
             app.logger.error('Database initialization error: %s', str(e), exc_info=True)
