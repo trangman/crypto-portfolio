@@ -1,103 +1,142 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="bg-white rounded-lg shadow-md p-4 sm:p-8">
-        <h2 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-primary-900">Add New Transaction</h2>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold mb-4 text-primary-900">Cryptocurrency Transaction</h2>
         
-        <div class="mb-6 sm:mb-8">
-            <h3 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-primary-800">Current Cryptocurrency Prices</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                {% for crypto in cryptocurrencies %}
-                <div class="bg-primary-50 p-3 sm:p-4 rounded-lg border border-primary-100">
-                    <div class="font-bold text-primary-900">{{ crypto.symbol }}</div>
-                    <div class="text-primary-600 text-sm sm:text-base">{{ crypto.name }}</div>
-                    <div class="text-base sm:text-lg text-primary-800">${{ "%.2f"|format(crypto.current_price) }}</div>
-                    <div class="text-xs sm:text-sm text-primary-500">Last updated: {{ crypto.last_updated.strftime('%Y-%m-%d %H:%M:%S UTC') }}</div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
+        <!-- Transaction Form -->
+        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
+            <form method="POST" action="{{ url_for('transaction') }}" class="space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <!-- User Selection -->
+                    <div>
+                        <label for="user_id" class="block text-sm font-medium text-primary-700 mb-1">Client</label>
+                        <select name="user_id" id="user_id" required
+                            class="block w-full px-3 py-2 border border-primary-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                            <option value="">Select a client</option>
+                            {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.username }} (Balance: ${{ "%.2f"|format(user.cash_balance or 0) }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-        <form method="POST" action="{{ url_for('transaction') }}" class="space-y-4 sm:space-y-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                <div>
-                    <label for="user_id" class="block text-sm font-medium text-primary-700 mb-1">Client</label>
-                    <select id="user_id" name="user_id" required
-                        class="block w-full py-2 px-3 border border-primary-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-sm">
-                        <option value="">Select Client</option>
-                        {% for user in users %}
-                        {% if not user.is_admin %}
-                        <option value="{{ user.id }}">{{ user.username }}</option>
-                        {% endif %}
-                        {% endfor %}
-                    </select>
-                </div>
+                    <!-- Cryptocurrency Selection -->
+                    <div>
+                        <label for="crypto_id" class="block text-sm font-medium text-primary-700 mb-1">Cryptocurrency</label>
+                        <select name="crypto_id" id="crypto_id" required
+                            class="block w-full px-3 py-2 border border-primary-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                            <option value="">Select a cryptocurrency</option>
+                            {% for crypto in cryptocurrencies %}
+                            <option value="{{ crypto.id }}" data-price="{{ "%.10f"|format(crypto.current_price or 0) }}">
+                                {{ crypto.symbol }} - ${{ "%.10f"|format(crypto.current_price or 0) }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                <div>
-                    <label for="crypto_id" class="block text-sm font-medium text-primary-700 mb-1">Cryptocurrency</label>
-                    <select id="crypto_id" name="crypto_id" required
-                        class="block w-full py-2 px-3 border border-primary-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-sm">
-                        <option value="">Select Cryptocurrency</option>
-                        {% for crypto in cryptocurrencies %}
-                        <option value="{{ crypto.id }}" data-price="{{ crypto.current_price }}">
-                            {{ crypto.symbol }} - ${{ "%.2f"|format(crypto.current_price) }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
+                    <!-- Transaction Type -->
+                    <div>
+                        <label for="transaction_type" class="block text-sm font-medium text-primary-700 mb-1">Transaction Type</label>
+                        <select name="transaction_type" id="transaction_type" required
+                            class="block w-full px-3 py-2 border border-primary-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                            <option value="buy">Buy</option>
+                            <option value="sell">Sell</option>
+                        </select>
+                    </div>
 
-                <div>
-                    <label for="investment_amount" class="block text-sm font-medium text-primary-700 mb-1">Investment Amount (USD)</label>
-                    <div class="relative rounded-md shadow-sm">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <span class="text-primary-500 sm:text-sm">$</span>
+                    <!-- Investment Amount -->
+                    <div>
+                        <label for="investment_amount" class="block text-sm font-medium text-primary-700 mb-1">Investment Amount ($)</label>
+                        <input type="number" step="0.01" name="investment_amount" id="investment_amount" required
+                            class="block w-full px-3 py-2 border border-primary-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                            placeholder="Enter amount in USD">
+                    </div>
+
+                    <!-- Manual Price Toggle -->
+                    <div>
+                        <div class="flex items-center mb-2">
+                            <input type="checkbox" id="use_manual_price" name="use_manual_price"
+                                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-primary-300 rounded">
+                            <label for="use_manual_price" class="ml-2 block text-sm text-primary-700">
+                                Use Manual Price
+                            </label>
                         </div>
-                        <input type="number" step="0.01" min="0" name="investment_amount" id="investment_amount" required
-                            class="block w-full pl-7 py-2 px-3 border border-primary-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-sm"
-                            placeholder="0.00">
+                        <input type="number" step="0.00000001" name="manual_price" id="manual_price" disabled
+                            class="block w-full px-3 py-2 border border-primary-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                            placeholder="Enter manual price">
+                    </div>
+
+                    <!-- Units Preview -->
+                    <div>
+                        <label class="block text-sm font-medium text-primary-700 mb-1">Units to be Traded</label>
+                        <div id="units_preview" class="px-3 py-2 border border-primary-300 rounded-md bg-primary-50 text-primary-700">
+                            0.00000000
+                        </div>
                     </div>
                 </div>
 
-                <div>
-                    <label for="transaction_type" class="block text-sm font-medium text-primary-700 mb-1">Transaction Type</label>
-                    <select id="transaction_type" name="transaction_type" required
-                        class="block w-full py-2 px-3 border border-primary-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-sm">
-                        <option value="buy">Buy</option>
-                        <option value="sell">Sell</option>
-                    </select>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <a href="{{ url_for('admin') }}"
+                        class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                        class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150">
+                        Execute Transaction
+                    </button>
                 </div>
-            </div>
-
-            <div class="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 mt-6">
-                <a href="{{ url_for('admin') }}"
-                    class="w-full sm:w-auto text-center bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150">
-                    Cancel
-                </a>
-                <button type="submit"
-                    class="w-full sm:w-auto text-center bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150">
-                    Add Transaction
-                </button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 
 <script>
-    // Update estimated units when investment amount or cryptocurrency changes
-    document.getElementById('investment_amount').addEventListener('input', updateEstimatedUnits);
-    document.getElementById('crypto_id').addEventListener('change', updateEstimatedUnits);
-
-    function updateEstimatedUnits() {
-        const investmentAmount = parseFloat(document.getElementById('investment_amount').value) || 0;
+    document.addEventListener('DOMContentLoaded', function() {
         const cryptoSelect = document.getElementById('crypto_id');
-        const selectedOption = cryptoSelect.options[cryptoSelect.selectedIndex];
-        
-        if (selectedOption && selectedOption.value) {
-            const currentPrice = parseFloat(selectedOption.dataset.price);
-            const estimatedUnits = investmentAmount / currentPrice;
-            console.log(`Estimated units: ${estimatedUnits.toFixed(8)}`);
+        const investmentInput = document.getElementById('investment_amount');
+        const unitsPreview = document.getElementById('units_preview');
+        const useManualPriceCheckbox = document.getElementById('use_manual_price');
+        const manualPriceInput = document.getElementById('manual_price');
+
+        function updateUnitsPreview() {
+            const selectedOption = cryptoSelect.options[cryptoSelect.selectedIndex];
+            if (!selectedOption.value) return;
+
+            const investment = parseFloat(investmentInput.value) || 0;
+            let price;
+
+            if (useManualPriceCheckbox.checked) {
+                price = parseFloat(manualPriceInput.value) || 0;
+            } else {
+                price = parseFloat(selectedOption.dataset.price) || 0;
+            }
+
+            const units = price > 0 ? investment / price : 0;
+            unitsPreview.textContent = units.toFixed(8);
         }
-    }
+
+        cryptoSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value && useManualPriceCheckbox.checked) {
+                manualPriceInput.value = selectedOption.dataset.price;
+            }
+            updateUnitsPreview();
+        });
+
+        investmentInput.addEventListener('input', updateUnitsPreview);
+        manualPriceInput.addEventListener('input', updateUnitsPreview);
+
+        useManualPriceCheckbox.addEventListener('change', function() {
+            manualPriceInput.disabled = !this.checked;
+            if (this.checked) {
+                const selectedOption = cryptoSelect.options[cryptoSelect.selectedIndex];
+                if (selectedOption.value) {
+                    manualPriceInput.value = selectedOption.dataset.price;
+                }
+            }
+            updateUnitsPreview();
+        });
+    });
 </script>
 {% endblock %} 

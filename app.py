@@ -211,6 +211,7 @@ class Transaction(db.Model):
     units = db.Column(db.Numeric(30, 10), nullable=False)  # Units with 10 decimals
     transaction_type = db.Column(db.String(4), nullable=False)  # 'buy' or 'sell'
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    manual_price = db.Column(db.Boolean, default=False)  # Flag to indicate if price was manually set
 
     def calculate_units(self):
         # Convert both values to Decimal if they aren't already
@@ -591,8 +592,10 @@ def transaction():
             crypto_id = request.form.get('crypto_id')
             investment_amount = Decimal(request.form.get('investment_amount'))
             transaction_type = request.form.get('transaction_type')
+            use_manual_price = request.form.get('use_manual_price') == 'on'
+            manual_price = Decimal(request.form.get('manual_price', '0')) if use_manual_price else None
             
-            app.logger.info(f'Creating new transaction: user_id={user_id}, crypto_id={crypto_id}, amount={investment_amount}, type={transaction_type}')
+            app.logger.info(f'Creating new transaction: user_id={user_id}, crypto_id={crypto_id}, amount={investment_amount}, type={transaction_type}, manual_price={manual_price if use_manual_price else "N/A"}')
             
             # Get the user and check their balance
             user = User.query.get(user_id)
@@ -616,20 +619,26 @@ def transaction():
                 flash('Invalid cryptocurrency selected')
                 return redirect(url_for('transaction'))
             
-            # Update crypto price before creating transaction
-            success, error = crypto.update_price()
-            if not success:
-                app.logger.error(f'Failed to update price for {crypto.symbol}: {error}')
-                flash(f'Error updating cryptocurrency price: {error}')
-                return redirect(url_for('transaction'))
+            # If using manual price, skip price update
+            price_at_time = manual_price if use_manual_price else None
+            
+            if not use_manual_price:
+                # Update crypto price before creating transaction
+                success, error = crypto.update_price()
+                if not success:
+                    app.logger.error(f'Failed to update price for {crypto.symbol}: {error}')
+                    flash(f'Error updating cryptocurrency price: {error}')
+                    return redirect(url_for('transaction'))
+                price_at_time = Decimal(str(crypto.current_price))
             
             # Create new transaction with price as Decimal
             new_transaction = Transaction(
                 user_id=user_id,
                 crypto_id=crypto_id,
                 investment_amount=investment_amount,
-                price_at_time=Decimal(str(crypto.current_price)),
-                transaction_type=transaction_type
+                price_at_time=price_at_time,
+                transaction_type=transaction_type,
+                manual_price=use_manual_price
             )
             
             # Calculate the number of units
@@ -650,7 +659,7 @@ def transaction():
                     flash(f'Insufficient {crypto.symbol} units. Available: {total_units}')
                     return redirect(url_for('transaction'))
             
-            app.logger.info(f'Transaction details: price={crypto.current_price}, units={new_transaction.units}')
+            app.logger.info(f'Transaction details: price={price_at_time}, units={new_transaction.units}')
             
             # Update user's cash balance
             if transaction_type == 'buy':
