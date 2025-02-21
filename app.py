@@ -1248,6 +1248,61 @@ def stock_transaction():
     stocks = Stock.query.all()
     return render_template('stock_transaction.html', users=users, stocks=stocks)
 
+@app.route('/transaction/<transaction_type>/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_transaction(transaction_type, id):
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+    
+    try:
+        if transaction_type == 'crypto':
+            transaction = Transaction.query.get_or_404(id)
+            user = transaction.user
+            
+            # Revert balance changes
+            if transaction.transaction_type == 'buy':
+                # Return the invested amount to user's balance
+                user.cash_balance = Decimal(str(user.cash_balance)) + Decimal(str(transaction.investment_amount))
+            else:  # sell
+                # Deduct the amount from user's balance
+                user.cash_balance = Decimal(str(user.cash_balance)) - Decimal(str(transaction.investment_amount))
+            
+            db.session.delete(transaction)
+            
+        elif transaction_type == 'stock':
+            transaction = StockTransaction.query.get_or_404(id)
+            user = transaction.user
+            
+            # Revert balance changes
+            if transaction.transaction_type == 'buy':
+                # Return the invested amount to user's balance
+                user.cash_balance = Decimal(str(user.cash_balance)) + Decimal(str(transaction.investment_amount))
+            else:  # sell
+                # Deduct the amount from user's balance
+                user.cash_balance = Decimal(str(user.cash_balance)) - Decimal(str(transaction.investment_amount))
+            
+            db.session.delete(transaction)
+            
+        elif transaction_type == 'cash':
+            transaction = CashTransaction.query.get_or_404(id)
+            user = transaction.user
+            
+            # Revert the cash transaction
+            user.cash_balance = Decimal(str(user.cash_balance)) - Decimal(str(transaction.amount))
+            
+            db.session.delete(transaction)
+            
+        else:
+            return jsonify({'success': False, 'message': 'Invalid transaction type'}), 400
+        
+        db.session.commit()
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error deleting transaction: {str(e)}', exc_info=True)
+        return jsonify({'success': False, 'message': 'Error deleting transaction'})
+
 # Add this at the bottom of the file
 if __name__ == '__main__':
     with app.app_context():
