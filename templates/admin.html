@@ -153,7 +153,7 @@
                                 <button type="button" 
                                         data-type="crypto"
                                         data-id="{{ transaction.id }}"
-                                        class="delete-transaction text-red-600 hover:text-red-900">
+                                        class="delete-transaction bg-red-100 text-red-600 hover:text-red-900 px-2 py-1 rounded">
                                     Delete
                                 </button>
                             </td>
@@ -191,7 +191,7 @@
                                 <button type="button" 
                                         data-type="stock"
                                         data-id="{{ transaction.id }}"
-                                        class="delete-transaction text-red-600 hover:text-red-900">
+                                        class="delete-transaction bg-red-100 text-red-600 hover:text-red-900 px-2 py-1 rounded">
                                     Delete
                                 </button>
                             </td>
@@ -229,7 +229,7 @@
                                 <button type="button" 
                                         data-type="cash"
                                         data-id="{{ transaction.id }}"
-                                        class="delete-transaction text-red-600 hover:text-red-900">
+                                        class="delete-transaction bg-red-100 text-red-600 hover:text-red-900 px-2 py-1 rounded">
                                     Delete
                                 </button>
                             </td>
@@ -250,16 +250,23 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.delete-transaction').forEach(button => {
+    console.log('DOM Content Loaded');
+    const deleteButtons = document.querySelectorAll('.delete-transaction');
+    console.log('Found delete buttons:', deleteButtons.length);
+    
+    deleteButtons.forEach(button => {
+        console.log('Attaching listener to button:', button.dataset.type, button.dataset.id);
         button.addEventListener('click', function() {
             const type = this.getAttribute('data-type');
             const id = this.getAttribute('data-id');
+            console.log('Delete button clicked:', type, id);
             deleteTransaction(type, id);
         });
     });
 });
 
 function deleteTransaction(type, id) {
+    console.log('Attempting to delete transaction:', type, id);
     if (!confirm('Are you sure you want to delete this transaction? This will revert any balance changes.')) {
         return;
     }
@@ -270,8 +277,12 @@ function deleteTransaction(type, id) {
             'Content-Type': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Delete response:', response);
+        return response.json();
+    })
     .then(data => {
+        console.log('Delete data:', data);
         if (data.success) {
             window.location.reload();
         } else {
@@ -279,7 +290,7 @@ function deleteTransaction(type, id) {
         }
     })
     .catch(error => {
-        console.error('Error:', error);
+        console.error('Delete error:', error);
         alert('Error deleting transaction');
     });
 }
