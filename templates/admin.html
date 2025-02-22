@@ -1,6 +1,16 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+.delete-transaction {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 10 !important;
+}
+</style>
+
 <div class="max-w-6xl mx-auto px-4 py-8">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         <!-- Admin Actions -->
@@ -149,11 +159,11 @@
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900">-</div>
                             </td>
-                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 relative">
                                 <button type="button" 
                                         data-type="crypto"
                                         data-id="{{ transaction.id }}"
-                                        class="delete-transaction bg-red-100 text-red-600 hover:text-red-900 px-2 py-1 rounded">
+                                        class="delete-transaction bg-red-100 text-red-600 hover:text-red-900 px-2 py-1 rounded inline-block z-10">
                                     Delete
                                 </button>
                             </td>
@@ -187,11 +197,11 @@
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900">-</div>
                             </td>
-                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 relative">
                                 <button type="button" 
                                         data-type="stock"
                                         data-id="{{ transaction.id }}"
-                                        class="delete-transaction bg-red-100 text-red-600 hover:text-red-900 px-2 py-1 rounded">
+                                        class="delete-transaction bg-red-100 text-red-600 hover:text-red-900 px-2 py-1 rounded inline-block z-10">
                                     Delete
                                 </button>
                             </td>
@@ -225,11 +235,11 @@
                             <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900">{{ transaction.notes or '-' }}</div>
                             </td>
-                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 relative">
                                 <button type="button" 
                                         data-type="cash"
                                         data-id="{{ transaction.id }}"
-                                        class="delete-transaction bg-red-100 text-red-600 hover:text-red-900 px-2 py-1 rounded">
+                                        class="delete-transaction bg-red-100 text-red-600 hover:text-red-900 px-2 py-1 rounded inline-block z-10">
                                     Delete
                                 </button>
                             </td>
