@@ -594,8 +594,9 @@ def transaction():
             transaction_type = request.form.get('transaction_type')
             use_manual_price = request.form.get('use_manual_price') == 'on'
             manual_price = Decimal(request.form.get('manual_price', '0')) if use_manual_price else None
+            sell_percentage = request.form.get('sell_percentage')  # This will be None if not provided
             
-            app.logger.info(f'Creating new transaction: user_id={user_id}, crypto_id={crypto_id}, amount={investment_amount}, type={transaction_type}, manual_price={manual_price if use_manual_price else "N/A"}')
+            app.logger.info(f'Creating new transaction: user_id={user_id}, crypto_id={crypto_id}, amount={investment_amount}, type={transaction_type}, manual_price={manual_price if use_manual_price else "N/A"}, sell_percentage={sell_percentage}')
             
             # Get the user and check their balance
             user = User.query.get(user_id)
@@ -604,14 +605,6 @@ def transaction():
                 flash('Invalid user selected')
                 return redirect(url_for('transaction'))
 
-            # For buy transactions, check if user has sufficient balance
-            if transaction_type == 'buy':
-                current_balance = Decimal(str(user.cash_balance))
-                if current_balance < investment_amount:
-                    app.logger.warning(f'Insufficient funds: User {user.username} has ${current_balance} but needs ${investment_amount}')
-                    flash(f'Insufficient funds. Available balance: ${current_balance}')
-                    return redirect(url_for('transaction'))
-            
             # Get the cryptocurrency and its current price
             crypto = Cryptocurrency.query.get(crypto_id)
             if not crypto:
@@ -631,6 +624,39 @@ def transaction():
                     return redirect(url_for('transaction'))
                 price_at_time = Decimal(str(crypto.current_price))
             
+            # For sell transactions, check if user has enough units
+            if transaction_type == 'sell':
+                # Calculate total units owned
+                total_units = Decimal('0')
+                for tx in Transaction.query.filter_by(user_id=user_id, crypto_id=crypto_id).all():
+                    if tx.transaction_type == 'buy':
+                        total_units += Decimal(str(tx.units))
+                    else:
+                        total_units -= Decimal(str(tx.units))
+                
+                # If sell_percentage is provided, calculate the investment amount based on percentage
+                if sell_percentage:
+                    percentage = Decimal(sell_percentage) / Decimal('100')
+                    units_to_sell = total_units * percentage
+                    investment_amount = units_to_sell * price_at_time
+                    app.logger.info(f'Selling {percentage * 100}% of {total_units} units = {units_to_sell} units at ${price_at_time} = ${investment_amount}')
+                else:
+                    # Calculate units based on investment amount
+                    units_to_sell = investment_amount / price_at_time
+                
+                if total_units < units_to_sell:
+                    app.logger.warning(f'Insufficient crypto units: User has {total_units} but wants to sell {units_to_sell}')
+                    flash(f'Insufficient {crypto.symbol} units. Available: {total_units}')
+                    return redirect(url_for('transaction'))
+            
+            # For buy transactions, check if user has sufficient balance
+            if transaction_type == 'buy':
+                current_balance = Decimal(str(user.cash_balance))
+                if current_balance < investment_amount:
+                    app.logger.warning(f'Insufficient funds: User {user.username} has ${current_balance} but needs ${investment_amount}')
+                    flash(f'Insufficient funds. Available balance: ${current_balance}')
+                    return redirect(url_for('transaction'))
+            
             # Create new transaction with price as Decimal
             new_transaction = Transaction(
                 user_id=user_id,
@@ -643,21 +669,6 @@ def transaction():
             
             # Calculate the number of units
             new_transaction.calculate_units()
-            
-            # For sell transactions, check if user has enough units
-            if transaction_type == 'sell':
-                # Calculate total units owned
-                total_units = Decimal('0')
-                for tx in Transaction.query.filter_by(user_id=user_id, crypto_id=crypto_id).all():
-                    if tx.transaction_type == 'buy':
-                        total_units += Decimal(str(tx.units))
-                    else:
-                        total_units -= Decimal(str(tx.units))
-                
-                if total_units < new_transaction.units:
-                    app.logger.warning(f'Insufficient crypto units: User has {total_units} but wants to sell {new_transaction.units}')
-                    flash(f'Insufficient {crypto.symbol} units. Available: {total_units}')
-                    return redirect(url_for('transaction'))
             
             app.logger.info(f'Transaction details: price={price_at_time}, units={new_transaction.units}')
             
@@ -914,6 +925,168 @@ def get_prices():
         db.session.rollback()
         print(f"Error fetching prices: {str(e)}")
         return jsonify({'success': False, 'message': 'Error fetching prices'}), 500
+
+@app.route('/api/holdings', methods=['GET'])
+@login_required
+def get_holdings():
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        
+    try:
+        user_id = request.args.get('user_id', type=int)
+        crypto_id = request.args.get('crypto_id', type=int)
+        
+        if not user_id or not crypto_id:
+            return jsonify({'success': False, 'message': 'Missing parameters'}), 400
+            
+        # Get all transactions for this user and cryptocurrency
+        transactions = Transaction.query.filter_by(user_id=user_id, crypto_id=crypto_id).all()
+        
+        # Calculate total units and value
+        total_units = Decimal('0')
+        for tx in transactions:
+            if tx.transaction_type == 'buy':
+                total_units += Decimal(str(tx.units))
+            else:
+                total_units -= Decimal(str(tx.units))
+        
+        # Get current price
+        crypto = Cryptocurrency.query.get(crypto_id)
+        current_price = Decimal(str(crypto.current_price))
+        total_value = total_units * current_price
+        
+        return jsonify({
+            'success': True,
+            'units': float(total_units),
+            'value': float(total_value),
+            'price': float(current_price)
+        })
+        
+    except Exception as e:
+        app.logger.error(f"Error fetching holdings: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/user_positions', methods=['GET'])
+@login_required
+def get_user_positions():
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        
+    try:
+        user_id = request.args.get('user_id', type=int)
+        
+        if not user_id:
+            return jsonify({'success': False, 'message': 'Missing user_id parameter'}), 400
+            
+        # Get all cryptocurrencies
+        cryptos = Cryptocurrency.query.all()
+        
+        # Calculate positions for each cryptocurrency
+        positions = []
+        
+        for crypto in cryptos:
+            # Get all transactions for this user and cryptocurrency
+            transactions = Transaction.query.filter_by(user_id=user_id, crypto_id=crypto.id).all()
+            
+            if not transactions:
+                continue  # Skip if no transactions
+                
+            # Calculate total units
+            total_units = Decimal('0')
+            for tx in transactions:
+                if tx.transaction_type == 'buy':
+                    total_units += Decimal(str(tx.units))
+                else:
+                    total_units -= Decimal(str(tx.units))
+            
+            # Only include if user has a positive balance
+            if total_units > Decimal('0'):
+                # Update price to get current value
+                crypto.update_price()
+                current_price = Decimal(str(crypto.current_price))
+                total_value = total_units * current_price
+                
+                positions.append({
+                    'crypto_id': crypto.id,
+                    'symbol': crypto.symbol,
+                    'name': crypto.name,
+                    'units': float(total_units),
+                    'price': float(current_price),
+                    'value': float(total_value)
+                })
+        
+        # Sort positions by value (highest first)
+        positions.sort(key=lambda x: x['value'], reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'positions': positions
+        })
+        
+    except Exception as e:
+        app.logger.error(f"Error fetching user positions: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/user_stock_positions', methods=['GET'])
+@login_required
+def get_user_stock_positions():
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        
+    try:
+        user_id = request.args.get('user_id', type=int)
+        
+        if not user_id:
+            return jsonify({'success': False, 'message': 'Missing user_id parameter'}), 400
+            
+        # Get all stocks
+        stocks = Stock.query.all()
+        
+        # Calculate positions for each stock
+        positions = []
+        
+        for stock in stocks:
+            # Get all transactions for this user and stock
+            transactions = StockTransaction.query.filter_by(user_id=user_id, stock_id=stock.id).all()
+            
+            if not transactions:
+                continue  # Skip if no transactions
+                
+            # Calculate total units
+            total_units = Decimal('0')
+            for tx in transactions:
+                if tx.transaction_type == 'buy':
+                    total_units += Decimal(str(tx.units))
+                else:
+                    total_units -= Decimal(str(tx.units))
+            
+            # Only include if user has a positive balance
+            if total_units > Decimal('0'):
+                # Update price to get current value
+                stock.update_price()
+                current_price = Decimal(str(stock.current_price))
+                total_value = total_units * current_price
+                
+                positions.append({
+                    'stock_id': stock.id,
+                    'symbol': stock.symbol,
+                    'name': stock.name,
+                    'units': float(total_units),
+                    'price': float(current_price),
+                    'value': float(total_value)
+                })
+        
+        # Sort positions by value (highest first)
+        positions.sort(key=lambda x: x['value'], reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'positions': positions
+        })
+        
+    except Exception as e:
+        app.logger.error(f"Error fetching user stock positions: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/user/<int:user_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -1196,6 +1369,7 @@ def stock_transaction():
         investment_amount = Decimal(request.form.get('investment_amount', '0'))
         use_manual_price = request.form.get('use_manual_price') == 'on'
         manual_price = Decimal(request.form.get('manual_price', '0')) if use_manual_price else None
+        close_position = request.form.get('close_position') == 'on'
 
         if not all([user_id, stock_id, transaction_type, investment_amount > 0]):
             flash('All fields are required and investment amount must be positive.', 'error')
@@ -1211,6 +1385,33 @@ def stock_transaction():
         if transaction_type == 'buy' and investment_amount > current_balance:
             flash('Insufficient funds for this transaction.', 'error')
             return redirect(url_for('stock_transaction'))
+
+        # For close position, verify the amount matches the user's holdings
+        if transaction_type == 'sell' and close_position:
+            # Calculate user's current holdings for this stock
+            transactions = StockTransaction.query.filter_by(user_id=user_id, stock_id=stock_id).all()
+            total_units = Decimal('0')
+            for tx in transactions:
+                if tx.transaction_type == 'buy':
+                    total_units += Decimal(str(tx.units))
+                else:
+                    total_units -= Decimal(str(tx.units))
+            
+            if total_units <= 0:
+                flash('No position to close for this stock.', 'error')
+                return redirect(url_for('stock_transaction'))
+            
+            # Get current price for the stock
+            price_at_time = manual_price if use_manual_price else stock.current_price
+            
+            # Calculate the total value of the position
+            position_value = total_units * price_at_time
+            
+            # If the submitted amount is significantly different from the calculated position value, warn the user
+            if abs(investment_amount - position_value) > Decimal('0.01'):
+                app.logger.warning(f"Close position amount mismatch: submitted {investment_amount}, calculated {position_value}")
+                # Use the calculated value instead
+                investment_amount = position_value
 
         # Get price for transaction
         price_at_time = manual_price if use_manual_price else stock.current_price

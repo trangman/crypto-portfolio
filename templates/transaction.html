@@ -28,11 +28,15 @@
                             class="block w-full px-3 py-2 border border-primary-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                             <option value="">Select a cryptocurrency</option>
                             {% for crypto in cryptocurrencies %}
-                            <option value="{{ crypto.id }}" data-price="{{ "%.10f"|format(crypto.current_price or 0) }}">
+                            <option value="{{ crypto.id }}" data-price="{{ "%.10f"|format(crypto.current_price or 0) }}" class="buy-option">
                                 {{ crypto.symbol }} - ${{ "%.10f"|format(crypto.current_price or 0) }}
                             </option>
                             {% endfor %}
+                            <!-- Sell options will be populated dynamically -->
                         </select>
+                        <div id="loading_indicator" class="hidden mt-2 text-sm text-primary-600">
+                            <span>Loading available positions...</span>
+                        </div>
                     </div>
 
                     <!-- Transaction Type -->
@@ -47,10 +51,20 @@
 
                     <!-- Investment Amount -->
                     <div>
-                        <label for="investment_amount" class="block text-sm font-medium text-primary-700 mb-1">Investment Amount ($)</label>
-                        <input type="number" step="0.01" name="investment_amount" id="investment_amount" required
+                        <label for="investment_amount" id="amount_label" class="block text-sm font-medium text-primary-700 mb-1">Investment Amount ($)</label>
+                        <input type="number" step="0.00000001" name="investment_amount" id="investment_amount" required
                             class="block w-full px-3 py-2 border border-primary-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                             placeholder="Enter amount in USD">
+                        
+                        <!-- Percentage Sell Options -->
+                        <div id="percentage_sell_options" class="hidden mt-2 flex space-x-2">
+                            <span class="text-sm text-gray-600">Sell:</span>
+                            <button type="button" data-percent="25" class="percent-btn bg-gray-200 hover:bg-gray-300 text-xs px-2 py-1 rounded">25%</button>
+                            <button type="button" data-percent="50" class="percent-btn bg-gray-200 hover:bg-gray-300 text-xs px-2 py-1 rounded">50%</button>
+                            <button type="button" data-percent="75" class="percent-btn bg-gray-200 hover:bg-gray-300 text-xs px-2 py-1 rounded">75%</button>
+                            <button type="button" data-percent="100" class="percent-btn bg-gray-200 hover:bg-gray-300 text-xs px-2 py-1 rounded">100%</button>
+                        </div>
+                        <input type="hidden" name="sell_percentage" id="sell_percentage" value="">
                     </div>
 
                     <!-- Manual Price Toggle -->
@@ -94,10 +108,26 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const cryptoSelect = document.getElementById('crypto_id');
+        const userSelect = document.getElementById('user_id');
+        const transactionTypeSelect = document.getElementById('transaction_type');
         const investmentInput = document.getElementById('investment_amount');
+        const amountLabel = document.getElementById('amount_label');
         const unitsPreview = document.getElementById('units_preview');
         const useManualPriceCheckbox = document.getElementById('use_manual_price');
         const manualPriceInput = document.getElementById('manual_price');
+        const percentageSellOptions = document.getElementById('percentage_sell_options');
+        const percentButtons = document.querySelectorAll('.percent-btn');
+        const sellPercentageInput = document.getElementById('sell_percentage');
+        const loadingIndicator = document.getElementById('loading_indicator');
+        
+        // Store original buy options
+        const buyOptions = Array.from(cryptoSelect.querySelectorAll('option'));
+        
+        // Store user holdings data
+        let userHoldings = {};
+
+        // Call updateAmountLabel on page load
+        updateAmountLabel();
 
         function updateUnitsPreview() {
             const selectedOption = cryptoSelect.options[cryptoSelect.selectedIndex];
@@ -116,12 +146,197 @@
             unitsPreview.textContent = units.toFixed(8);
         }
 
+        // Update the amount label based on transaction type
+        function updateAmountLabel() {
+            const transactionType = transactionTypeSelect.value;
+            console.log("Updating label for transaction type:", transactionType);
+            if (transactionType === 'sell') {
+                amountLabel.textContent = 'Transaction Amount ($)';
+            } else {
+                amountLabel.textContent = 'Investment Amount ($)';
+            }
+        }
+
+        // Fetch user's open positions and update the crypto dropdown
+        function updateCryptoOptions() {
+            const userId = userSelect.value;
+            const transactionType = transactionTypeSelect.value;
+            
+            // Update the amount label
+            updateAmountLabel();
+            
+            // Reset sell percentage
+            sellPercentageInput.value = '';
+            
+            // Clear the crypto dropdown
+            cryptoSelect.innerHTML = '<option value="">Select a cryptocurrency</option>';
+            
+            if (!userId) return;
+            
+            if (transactionType === 'buy') {
+                // For buy transactions, show all cryptocurrencies
+                buyOptions.forEach(option => {
+                    if (option.value) { // Skip the empty default option
+                        cryptoSelect.appendChild(option.cloneNode(true));
+                    }
+                });
+                percentageSellOptions.classList.add('hidden');
+            } else if (transactionType === 'sell') {
+                // For sell transactions, only show cryptocurrencies with open positions
+                loadingIndicator.classList.remove('hidden');
+                
+                // Fetch open positions for this user
+                fetch(`/api/user_positions?user_id=${userId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        loadingIndicator.classList.add('hidden');
+                        
+                        if (data.success && data.positions.length > 0) {
+                            // Add options for cryptocurrencies with open positions
+                            data.positions.forEach(position => {
+                                const option = document.createElement('option');
+                                option.value = position.crypto_id;
+                                option.dataset.price = position.price;
+                                option.dataset.units = position.units;
+                                option.dataset.value = position.value;
+                                option.textContent = `${position.symbol} - $${parseFloat(position.price).toFixed(8)} (${parseFloat(position.units).toFixed(8)} units)`;
+                                cryptoSelect.appendChild(option);
+                            });
+                        } else {
+                            const option = document.createElement('option');
+                            option.disabled = true;
+                            option.textContent = 'No open positions available';
+                            cryptoSelect.appendChild(option);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching positions:', error);
+                        loadingIndicator.classList.add('hidden');
+                        
+                        const option = document.createElement('option');
+                        option.disabled = true;
+                        option.textContent = 'Error loading positions';
+                        cryptoSelect.appendChild(option);
+                    });
+            }
+        }
+
+        // Fetch user holdings when user and transaction type change
+        function fetchUserHoldings() {
+            const userId = userSelect.value;
+            const cryptoId = cryptoSelect.value;
+            const transactionType = transactionTypeSelect.value;
+            
+            // Reset sell percentage
+            sellPercentageInput.value = '';
+            
+            // Only show percentage options for sell transactions
+            if (transactionType === 'sell' && userId && cryptoId) {
+                // Show the percentage options
+                percentageSellOptions.classList.remove('hidden');
+            } else {
+                percentageSellOptions.classList.add('hidden');
+            }
+        }
+
+        // Handle percentage button clicks
+        percentButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const percent = parseInt(this.dataset.percent);
+                const selectedOption = cryptoSelect.options[cryptoSelect.selectedIndex];
+                const userId = userSelect.value;
+                
+                if (!selectedOption.value || !userId) return;
+                
+                // Highlight the selected button
+                percentButtons.forEach(btn => {
+                    btn.classList.remove('bg-primary-500', 'text-white');
+                    btn.classList.add('bg-gray-200');
+                });
+                this.classList.remove('bg-gray-200');
+                this.classList.add('bg-primary-500', 'text-white');
+                
+                // Set the sell percentage in the hidden input
+                sellPercentageInput.value = percent;
+                
+                // Get the crypto ID
+                const cryptoId = selectedOption.value;
+                
+                // If we already have the units and value in the dataset, use them
+                if (selectedOption.dataset.units && selectedOption.dataset.price) {
+                    // Calculate the total value of the position
+                    const totalUnits = parseFloat(selectedOption.dataset.units);
+                    const price = parseFloat(selectedOption.dataset.price);
+                    const totalValue = totalUnits * price;
+                    
+                    console.log(`DETAILED CALCULATION:`);
+                    console.log(`Units from dataset: ${selectedOption.dataset.units}`);
+                    console.log(`Price from dataset: ${selectedOption.dataset.price}`);
+                    console.log(`Parsed Units: ${totalUnits}`);
+                    console.log(`Parsed Price: ${price}`);
+                    console.log(`Total Value (units * price): ${totalUnits} * ${price} = ${totalValue}`);
+                    
+                    // Calculate the sell value based on percentage
+                    const sellValue = totalValue * (percent / 100);
+                    
+                    console.log(`Selling ${percent}% of position worth $${totalValue.toFixed(2)} = $${sellValue.toFixed(2)}`);
+                    
+                    // Update the investment amount field with dollar value
+                    investmentInput.value = sellValue.toFixed(2);
+                    
+                    // Update the units preview
+                    updateUnitsPreview();
+                } else {
+                    // Otherwise fetch from API
+                    fetch(`/api/holdings?user_id=${userId}&crypto_id=${cryptoId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Calculate the dollar value to sell based on percentage
+                                const totalUnits = data.units;
+                                const price = data.price;
+                                const totalValue = totalUnits * price;
+                                
+                                console.log(`Units: ${totalUnits}, Price: ${price}, Total Value: ${totalValue}`);
+                                
+                                const sellValue = totalValue * (percent / 100);
+                                
+                                console.log(`Selling ${percent}% of position worth $${totalValue.toFixed(2)} = $${sellValue.toFixed(2)}`);
+                                
+                                // Update the investment amount field with dollar value
+                                investmentInput.value = sellValue.toFixed(2);
+                                
+                                // Update the units preview
+                                updateUnitsPreview();
+                            } else {
+                                console.error('Error fetching holdings:', data.message);
+                                alert('Could not fetch holdings. Please enter the amount manually.');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Could not fetch holdings. Please enter the amount manually.');
+                        });
+                }
+            });
+        });
+
         cryptoSelect.addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
             if (selectedOption.value && useManualPriceCheckbox.checked) {
                 manualPriceInput.value = selectedOption.dataset.price;
             }
             updateUnitsPreview();
+            fetchUserHoldings();
+        });
+
+        userSelect.addEventListener('change', function() {
+            updateCryptoOptions();
+        });
+        
+        transactionTypeSelect.addEventListener('change', function() {
+            updateCryptoOptions();
+            updateAmountLabel(); // Ensure label updates when transaction type changes
         });
 
         investmentInput.addEventListener('input', updateUnitsPreview);

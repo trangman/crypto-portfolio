@@ -21,20 +21,6 @@
                         </select>
                     </div>
 
-                    <!-- Stock Selection -->
-                    <div>
-                        <label for="stock_id" class="block text-sm font-medium text-primary-700 mb-1">Stock</label>
-                        <select name="stock_id" id="stock_id" required
-                            class="block w-full px-3 py-2 border border-primary-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                            <option value="">Select a stock</option>
-                            {% for stock in stocks %}
-                            <option value="{{ stock.id }}" data-price="{{ "%.2f"|format(stock.current_price or 0) }}">
-                                {{ stock.symbol }} - {{ stock.name }} (${{ "%.2f"|format(stock.current_price or 0) }})
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
                     <!-- Transaction Type -->
                     <div>
                         <label for="transaction_type" class="block text-sm font-medium text-primary-700 mb-1">Transaction Type</label>
@@ -45,12 +31,45 @@
                         </select>
                     </div>
 
+                    <!-- Stock Selection -->
+                    <div>
+                        <label for="stock_id" id="stock_label" class="block text-sm font-medium text-primary-700 mb-1">Stock</label>
+                        <div class="relative">
+                            <select name="stock_id" id="stock_id" required
+                                class="block w-full px-3 py-2 border border-primary-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                                <option value="">Select a stock</option>
+                                {% for stock in stocks %}
+                                <option value="{{ stock.id }}" data-price="{{ "%.2f"|format(stock.current_price or 0) }}">
+                                    {{ stock.symbol }} - {{ stock.name }} (${{ "%.2f"|format(stock.current_price or 0) }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div id="loading_positions" class="hidden absolute right-2 top-2">
+                                <svg class="animate-spin h-5 w-5 text-primary-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Investment Amount -->
                     <div>
                         <label for="investment_amount" class="block text-sm font-medium text-primary-700 mb-1">Investment Amount ($)</label>
                         <input type="number" step="0.01" name="investment_amount" id="investment_amount" required
                             class="block w-full px-3 py-2 border border-primary-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                             placeholder="Enter amount in USD">
+                    </div>
+
+                    <!-- Close Position Checkbox (for sell only) -->
+                    <div id="close_position_container" class="hidden">
+                        <div class="flex items-center mb-2">
+                            <input type="checkbox" id="close_position" name="close_position"
+                                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-primary-300 rounded">
+                            <label for="close_position" class="ml-2 block text-sm text-primary-700">
+                                Close Position (Sell All)
+                            </label>
+                        </div>
                     </div>
 
                     <!-- Manual Price Toggle -->
@@ -93,11 +112,101 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const userSelect = document.getElementById('user_id');
+        const transactionTypeSelect = document.getElementById('transaction_type');
         const stockSelect = document.getElementById('stock_id');
+        const stockLabel = document.getElementById('stock_label');
         const investmentInput = document.getElementById('investment_amount');
         const unitsPreview = document.getElementById('units_preview');
         const useManualPriceCheckbox = document.getElementById('use_manual_price');
         const manualPriceInput = document.getElementById('manual_price');
+        const closePositionContainer = document.getElementById('close_position_container');
+        const closePositionCheckbox = document.getElementById('close_position');
+        const loadingPositions = document.getElementById('loading_positions');
+        
+        // Store original stock options
+        const originalStockOptions = Array.from(stockSelect.options).map(option => {
+            return {
+                value: option.value,
+                text: option.text,
+                dataset: { ...option.dataset }
+            };
+        });
+
+        function updateStockLabel() {
+            if (transactionTypeSelect.value === 'sell') {
+                stockLabel.textContent = 'Active Positions';
+                closePositionContainer.classList.remove('hidden');
+            } else {
+                stockLabel.textContent = 'Stock';
+                closePositionContainer.classList.add('hidden');
+                closePositionCheckbox.checked = false;
+            }
+        }
+
+        function updateStockOptions() {
+            const userId = userSelect.value;
+            const transactionType = transactionTypeSelect.value;
+            
+            // Reset stock dropdown
+            stockSelect.innerHTML = '<option value="">Select a stock</option>';
+            
+            if (!userId) {
+                return;
+            }
+            
+            if (transactionType === 'buy') {
+                // Restore original options for buy
+                originalStockOptions.forEach(option => {
+                    if (option.value) {
+                        const newOption = document.createElement('option');
+                        newOption.value = option.value;
+                        newOption.text = option.text;
+                        if (option.dataset.price) {
+                            newOption.dataset.price = option.dataset.price;
+                        }
+                        stockSelect.appendChild(newOption);
+                    }
+                });
+            } else {
+                // Fetch active positions for sell
+                loadingPositions.classList.remove('hidden');
+                
+                fetch(`/api/user_stock_positions?user_id=${userId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        loadingPositions.classList.add('hidden');
+                        
+                        if (data.success && data.positions && data.positions.length > 0) {
+                            console.log('Received positions:', data.positions);
+                            
+                            data.positions.forEach(position => {
+                                const option = document.createElement('option');
+                                option.value = position.stock_id;
+                                option.text = `${position.symbol} - ${position.name} ($${position.price.toFixed(2)}) - ${position.units.toFixed(4)} units ($${position.value.toFixed(2)})`;
+                                option.dataset.price = position.price;
+                                option.dataset.units = position.units;
+                                option.dataset.value = position.value;
+                                stockSelect.appendChild(option);
+                            });
+                        } else {
+                            const option = document.createElement('option');
+                            option.value = '';
+                            option.text = 'No active positions found';
+                            stockSelect.appendChild(option);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching positions:', error);
+                        loadingPositions.classList.add('hidden');
+                        
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.text = 'Error loading positions';
+                        stockSelect.appendChild(option);
+                    });
+            }
+        }
 
         function updateUnitsPreview() {
             const selectedOption = stockSelect.options[stockSelect.selectedIndex];
@@ -116,9 +225,39 @@
             unitsPreview.textContent = units.toFixed(4);
         }
 
-        stockSelect.addEventListener('change', updateUnitsPreview);
+        function handleClosePositionChange() {
+            if (closePositionCheckbox.checked && stockSelect.selectedIndex > 0) {
+                const selectedOption = stockSelect.options[stockSelect.selectedIndex];
+                const units = parseFloat(selectedOption.dataset.units) || 0;
+                const price = parseFloat(selectedOption.dataset.price) || 0;
+                const totalValue = units * price;
+                
+                investmentInput.value = totalValue.toFixed(2);
+                updateUnitsPreview();
+            }
+        }
+
+        // Event listeners
+        userSelect.addEventListener('change', function() {
+            updateStockOptions();
+        });
+
+        transactionTypeSelect.addEventListener('change', function() {
+            updateStockLabel();
+            updateStockOptions();
+        });
+
+        stockSelect.addEventListener('change', function() {
+            updateUnitsPreview();
+            if (closePositionCheckbox.checked) {
+                handleClosePositionChange();
+            }
+        });
+
         investmentInput.addEventListener('input', updateUnitsPreview);
         manualPriceInput.addEventListener('input', updateUnitsPreview);
+
+        closePositionCheckbox.addEventListener('change', handleClosePositionChange);
 
         useManualPriceCheckbox.addEventListener('change', function() {
             manualPriceInput.disabled = !this.checked;
@@ -130,6 +269,9 @@
             }
             updateUnitsPreview();
         });
+
+        // Initialize
+        updateStockLabel();
     });
 </script>
 {% endblock %} 
