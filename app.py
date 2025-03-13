@@ -13,6 +13,7 @@ from logging.handlers import RotatingFileHandler
 from decimal import Decimal
 from pathlib import Path
 from dotenv import load_dotenv
+from decimal import InvalidOperation
 
 # Flask app configuration
 app = Flask(__name__)
@@ -297,6 +298,7 @@ class StockTransaction(db.Model):
     price_at_time = db.Column(db.Numeric(20, 2), nullable=False)  # Price with 2 decimals
     units = db.Column(db.Numeric(20, 4), nullable=False)  # Units with 4 decimals for stocks
     transaction_type = db.Column(db.String(4), nullable=False)  # 'buy' or 'sell'
+    
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     manual_price = db.Column(db.Boolean, default=False)  # Flag to indicate if price was manually set
 
