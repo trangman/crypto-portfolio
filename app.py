@@ -21,6 +21,10 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'your-secure-secret-key-here')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Define threshold constants
+MINIMUM_HOLDING_UNITS = Decimal('0.001')  # Minimum units to display
+MINIMUM_HOLDING_VALUE = Decimal('0.01')   # Minimum value in dollars to display
+
 # Database configuration with environment-based setup
 def get_database_url():
     # For local development using .env.local
@@ -500,49 +504,93 @@ def dashboard():
                     stock_holdings[stock.symbol]['total_units'] -= Decimal(str(transaction.units))
                     stock_holdings[stock.symbol]['total_investment'] -= Decimal(str(transaction.investment_amount))
 
+            # Clean up holdings
+            def clean_holdings(holdings_dict, asset_type='stock'):
+                """
+                Clean up holdings dictionary by removing dust values
+                
+                Args:
+                    holdings_dict: Dictionary of holdings
+                    asset_type: 'stock' or 'crypto' to determine which model to query
+                
+                Returns:
+                    Filtered dictionary without dust values
+                """
+                cleaned_holdings = {}
+                
+                for symbol, holding in holdings_dict.items():
+                    # Skip if units are below threshold or negative
+                    if holding['total_units'] <= MINIMUM_HOLDING_UNITS or holding['total_units'] < Decimal('0'):
+                        continue
+                        
+                    # Get current price to check value
+                    if asset_type == 'stock':
+                        asset = Stock.query.filter_by(symbol=symbol).first()
+                    else:
+                        asset = Cryptocurrency.query.filter_by(symbol=symbol).first()
+                        
+                    if not asset:
+                        continue
+                        
+                    # Update price to ensure we have the latest
+                    asset.update_price()
+                    current_price = Decimal(str(asset.current_price))
+                    
+                    # Calculate total value and skip if below threshold
+                    total_value = holding['total_units'] * current_price
+                    if total_value < MINIMUM_HOLDING_VALUE:
+                        continue
+                        
+                    # If we got here, this holding passes all filters
+                    cleaned_holdings[symbol] = holding
+                
+                return cleaned_holdings
+
+            # Clean up holdings before calculating values
+            crypto_holdings = clean_holdings(crypto_holdings, 'crypto')
+            stock_holdings = clean_holdings(stock_holdings, 'stock')
+
             # Update crypto prices and calculate current values
             for symbol, holding in crypto_holdings.items():
-                if holding['total_units'] > Decimal('0'):  # Only show active holdings
-                    crypto = Cryptocurrency.query.filter_by(symbol=symbol).first()
-                    # Update price before calculating values
-                    crypto.update_price()
-                    
-                    current_price_decimal = Decimal(str(crypto.current_price))
-                    current_value = holding['total_units'] * current_price_decimal
-                    avg_purchase_price = holding['total_investment'] / holding['total_units']
-                    price_change_since_purchase = current_price_decimal - avg_purchase_price
-                    
-                    holding.update({
-                        'current_price': current_price_decimal,
-                        'current_value': current_value,
-                        'profit_loss': current_value - holding['total_investment'],
-                        'profit_loss_percentage': ((current_value - holding['total_investment']) / holding['total_investment'] * Decimal('100')),
-                        'price_change_percentage_24h': Decimal(str(crypto.price_change_percentage_24h or '0')),
-                        'price_change_percentage_since_purchase': (price_change_since_purchase / avg_purchase_price * Decimal('100'))
-                    })
-                    crypto_portfolio.append(holding)
+                crypto = Cryptocurrency.query.filter_by(symbol=symbol).first()
+                # Update price before calculating values
+                crypto.update_price()
+                
+                current_price_decimal = Decimal(str(crypto.current_price))
+                current_value = holding['total_units'] * current_price_decimal
+                avg_purchase_price = holding['total_investment'] / holding['total_units']
+                price_change_since_purchase = current_price_decimal - avg_purchase_price
+                
+                holding.update({
+                    'current_price': current_price_decimal,
+                    'current_value': current_value,
+                    'profit_loss': current_value - holding['total_investment'],
+                    'profit_loss_percentage': ((current_value - holding['total_investment']) / holding['total_investment'] * Decimal('100')),
+                    'price_change_percentage_24h': Decimal(str(crypto.price_change_percentage_24h or '0')),
+                    'price_change_percentage_since_purchase': (price_change_since_purchase / avg_purchase_price * Decimal('100'))
+                })
+                crypto_portfolio.append(holding)
 
             # Update stock prices and calculate current values
             for symbol, holding in stock_holdings.items():
-                if holding['total_units'] > Decimal('0'):  # Only show active holdings
-                    stock = Stock.query.filter_by(symbol=symbol).first()
-                    # Update price before calculating values
-                    stock.update_price()
-                    
-                    current_price_decimal = Decimal(str(stock.current_price))
-                    current_value = holding['total_units'] * current_price_decimal
-                    avg_purchase_price = holding['total_investment'] / holding['total_units']
-                    price_change_since_purchase = current_price_decimal - avg_purchase_price
-                    
-                    holding.update({
-                        'current_price': current_price_decimal,
-                        'current_value': current_value,
-                        'profit_loss': current_value - holding['total_investment'],
-                        'profit_loss_percentage': ((current_value - holding['total_investment']) / holding['total_investment'] * Decimal('100')),
-                        'price_change_percentage_24h': Decimal(str(stock.price_change_percentage_24h or '0')),
-                        'price_change_percentage_since_purchase': (price_change_since_purchase / avg_purchase_price * Decimal('100'))
-                    })
-                    stock_portfolio.append(holding)
+                stock = Stock.query.filter_by(symbol=symbol).first()
+                # Update price before calculating values
+                stock.update_price()
+                
+                current_price_decimal = Decimal(str(stock.current_price))
+                current_value = holding['total_units'] * current_price_decimal
+                avg_purchase_price = holding['total_investment'] / holding['total_units']
+                price_change_since_purchase = current_price_decimal - avg_purchase_price
+                
+                holding.update({
+                    'current_price': current_price_decimal,
+                    'current_value': current_value,
+                    'profit_loss': current_value - holding['total_investment'],
+                    'profit_loss_percentage': ((current_value - holding['total_investment']) / holding['total_investment'] * Decimal('100')),
+                    'price_change_percentage_24h': Decimal(str(stock.price_change_percentage_24h or '0')),
+                    'price_change_percentage_since_purchase': (price_change_since_purchase / avg_purchase_price * Decimal('100'))
+                })
+                stock_portfolio.append(holding)
             
             # Commit the price updates
             db.session.commit()

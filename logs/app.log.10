@@ -1,81 +1,152 @@
-2025-02-05 11:09:10,981 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:242]
-2025-02-05 11:09:10,993 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:246]
-2025-02-05 11:09:10,997 INFO: Admin dashboard: Found 1 total transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:252]
-2025-02-05 11:09:10,997 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:256]
-2025-02-05 11:10:05,811 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:242]
-2025-02-05 11:10:05,812 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:246]
-2025-02-05 11:10:05,813 INFO: Admin dashboard: Found 1 total transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:252]
-2025-02-05 11:10:05,813 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:256]
-2025-02-05 11:10:08,378 INFO: Fetching users for admin page [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:329]
-2025-02-05 11:10:08,379 INFO: Successfully fetched 2 users [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:331]
-2025-02-05 11:10:08,381 INFO: Direct SQL query shows 1 transactions in database [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:337]
-2025-02-05 11:10:08,381 INFO: Fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:340]
-2025-02-05 11:10:08,383 INFO: Successfully fetched 1 transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:345]
-2025-02-05 11:10:08,383 INFO: Transaction details: [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:349]
-2025-02-05 11:10:08,383 INFO: Transaction: ID=1, User=Elon Musk, Type=buy, Crypto=BTC, Amount=5000.00, Units=0.0511, Timestamp=2025-02-05 03:23:42 [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:352]
-2025-02-05 11:10:54,169 INFO: Fetching users for admin page [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:329]
-2025-02-05 11:10:54,170 INFO: Successfully fetched 2 users [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:331]
-2025-02-05 11:10:54,171 INFO: Direct SQL query shows 1 transactions in database [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:337]
-2025-02-05 11:10:54,171 INFO: Fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:340]
-2025-02-05 11:10:54,173 INFO: Successfully fetched 1 transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:345]
-2025-02-05 11:10:54,173 INFO: Transaction details: [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:349]
-2025-02-05 11:10:54,174 INFO: Transaction: ID=1, User=Elon Musk, Type=buy, Crypto=BTC, Amount=5000.00, Units=0.0511, Timestamp=2025-02-05 03:23:42 [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:352]
-2025-02-05 11:10:57,782 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:242]
-2025-02-05 11:10:57,782 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:246]
-2025-02-05 11:10:57,784 INFO: Admin dashboard: Found 1 total transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:252]
-2025-02-05 11:10:57,784 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:256]
-2025-02-05 11:11:01,216 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:242]
-2025-02-05 11:11:01,217 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:246]
-2025-02-05 11:11:01,218 INFO: Admin dashboard: Found 1 total transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:252]
-2025-02-05 11:11:01,218 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:256]
-2025-02-05 11:11:27,266 INFO: Fetching users for admin page [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:329]
-2025-02-05 11:11:27,267 INFO: Successfully fetched 2 users [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:331]
-2025-02-05 11:11:27,268 INFO: Direct SQL query shows 1 transactions in database [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:337]
-2025-02-05 11:11:27,269 INFO: Fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:340]
-2025-02-05 11:11:27,270 INFO: Successfully fetched 1 transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:345]
-2025-02-05 11:11:27,270 INFO: Transaction details: [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:349]
-2025-02-05 11:11:27,270 INFO: Transaction: ID=1, User=Elon Musk, Type=buy, Crypto=BTC, Amount=5000.00, Units=0.0511, Timestamp=2025-02-05 03:23:42 [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:352]
-2025-02-05 11:11:32,767 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:242]
-2025-02-05 11:11:32,767 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:246]
-2025-02-05 11:11:32,769 INFO: Admin dashboard: Found 1 total transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:252]
-2025-02-05 11:11:32,769 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:256]
-2025-02-05 11:12:09,744 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:242]
-2025-02-05 11:12:09,744 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:246]
-2025-02-05 11:12:09,745 INFO: Admin dashboard: Found 1 total transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:252]
-2025-02-05 11:12:09,745 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:256]
-2025-02-05 11:13:02,540 INFO: Fetching users for admin page [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:329]
-2025-02-05 11:13:02,541 INFO: Successfully fetched 2 users [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:331]
-2025-02-05 11:13:02,542 INFO: Direct SQL query shows 1 transactions in database [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:337]
-2025-02-05 11:13:02,542 INFO: Fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:340]
-2025-02-05 11:13:02,543 INFO: Successfully fetched 1 transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:345]
-2025-02-05 11:13:02,544 INFO: Transaction details: [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:349]
-2025-02-05 11:13:02,544 INFO: Transaction: ID=1, User=Elon Musk, Type=buy, Crypto=BTC, Amount=5000.00, Units=0.0511, Timestamp=2025-02-05 03:23:42 [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:352]
-2025-02-05 11:13:10,719 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:242]
-2025-02-05 11:13:10,719 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:246]
-2025-02-05 11:13:10,721 INFO: Admin dashboard: Found 1 total transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:252]
-2025-02-05 11:13:10,721 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:256]
-2025-02-05 11:13:35,584 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:242]
-2025-02-05 11:13:35,584 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:246]
-2025-02-05 11:13:35,585 INFO: Admin dashboard: Found 1 total transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:252]
-2025-02-05 11:13:35,586 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:256]
-2025-02-05 11:13:50,306 INFO: Application startup [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:56]
-2025-02-05 11:13:50,307 INFO: SITE_URL: https://your-domain.com [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:59]
-2025-02-05 11:13:50,307 INFO: Database URL: mysql://root:@localhost/crypto_portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:60]
-2025-02-05 11:13:50,313 INFO: Testing database connection... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:744]
-2025-02-05 11:13:50,319 INFO: Database connection successful [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:747]
-2025-02-05 11:13:50,320 INFO: Checking database tables... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:750]
-2025-02-05 11:13:50,324 INFO: Database tables verified [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:752]
-2025-02-05 11:13:50,324 INFO: Checking cryptocurrencies... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:755]
-2025-02-05 11:13:50,336 INFO: Cryptocurrency initialization complete [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:757]
-2025-02-05 11:13:55,026 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:242]
-2025-02-05 11:13:55,026 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:246]
-2025-02-05 11:13:55,030 INFO: Admin dashboard: Found 1 total transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:252]
-2025-02-05 11:13:55,030 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:256]
-2025-02-05 11:15:00,940 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:242]
-2025-02-05 11:15:00,940 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:246]
-2025-02-05 11:15:00,942 INFO: Admin dashboard: Found 1 total transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:252]
-2025-02-05 11:15:00,942 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:256]
-2025-02-05 11:15:04,511 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:242]
-2025-02-05 11:15:04,511 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:246]
-2025-02-05 11:15:04,512 INFO: Admin dashboard: Found 1 total transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:252]
-2025-02-05 11:15:04,513 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:256]
+2025-02-20 21:10:47,469 ERROR: Error in dashboard route: (pymysql.err.OperationalError) (1054, "Unknown column 'transactions.manual_price' in 'field list'")
+[SQL: SELECT transactions.id AS transactions_id, transactions.user_id AS transactions_user_id, transactions.crypto_id AS transactions_crypto_id, transactions.investment_amount AS transactions_investment_amount, transactions.price_at_time AS transactions_price_at_time, transactions.units AS transactions_units, transactions.transaction_type AS transactions_transaction_type, transactions.timestamp AS transactions_timestamp, transactions.manual_price AS transactions_manual_price, users_1.id AS users_1_id, users_1.username AS users_1_username, users_1.email AS users_1_email, users_1.password_hash AS users_1_password_hash, users_1.is_admin AS users_1_is_admin, users_1.cash_balance AS users_1_cash_balance, cryptocurrencies_1.id AS cryptocurrencies_1_id, cryptocurrencies_1.symbol AS cryptocurrencies_1_symbol, cryptocurrencies_1.name AS cryptocurrencies_1_name, cryptocurrencies_1.current_price AS cryptocurrencies_1_current_price, cryptocurrencies_1.price_24h_ago AS cryptocurrencies_1_price_24h_ago, cryptocurrencies_1.price_change_24h AS cryptocurrencies_1_price_change_24h, cryptocurrencies_1.price_change_percentage_24h AS cryptocurrencies_1_price_change_percentage_24h, cryptocurrencies_1.last_updated AS cryptocurrencies_1_last_updated 
+FROM transactions LEFT OUTER JOIN users AS users_1 ON users_1.id = transactions.user_id LEFT OUTER JOIN cryptocurrencies AS cryptocurrencies_1 ON cryptocurrencies_1.id = transactions.crypto_id ORDER BY transactions.timestamp DESC]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:556]
+Traceback (most recent call last):
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1964, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\engine\default.py", line 942, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\pymysql\cursors.py", line 153, in execute
+    result = self._query(query)
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\pymysql\cursors.py", line 322, in _query
+    conn.query(q)
+    ~~~~~~~~~~^^^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\pymysql\connections.py", line 558, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\pymysql\connections.py", line 822, in _read_query_result
+    result.read()
+    ~~~~~~~~~~~^^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\pymysql\connections.py", line 1200, in read
+    first_packet = self.connection._read_packet()
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\pymysql\connections.py", line 772, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\pymysql\protocol.py", line 221, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\pymysql\err.py", line 143, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1054, "Unknown column 'transactions.manual_price' in 'field list'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\msphu\OneDrive\dev\fin2025\app.py", line 438, in dashboard
+    ).order_by(Transaction.timestamp.desc()).all()
+                                             ~~~^^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\orm\query.py", line 2699, in all
+    return self._iter().all()  # type: ignore
+           ~~~~~~~~~~^^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\orm\query.py", line 2853, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+                                                  ~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+        params,
+        ^^^^^^^
+        execution_options={"_sa_orm_load_options": self.load_options},
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2365, in execute
+    return self._execute_internal(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+    ...<4 lines>...
+        _add_event=_add_event,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self,
+        ^^^^^
+    ...<4 lines>...
+        conn,
+        ^^^^^
+    )
+    ^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\orm\context.py", line 305, in orm_execute_statement
+    result = conn.execute(
+        statement, params or {}, execution_options=execution_options
+    )
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1416, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\sql\elements.py", line 515, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1638, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1843, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1983, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\engine\base.py", line 2352, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1964, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\sqlalchemy\engine\default.py", line 942, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\pymysql\cursors.py", line 153, in execute
+    result = self._query(query)
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\pymysql\cursors.py", line 322, in _query
+    conn.query(q)
+    ~~~~~~~~~~^^^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\pymysql\connections.py", line 558, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\pymysql\connections.py", line 822, in _read_query_result
+    result.read()
+    ~~~~~~~~~~~^^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\pymysql\connections.py", line 1200, in read
+    first_packet = self.connection._read_packet()
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\pymysql\connections.py", line 772, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\pymysql\protocol.py", line 221, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\pymysql\err.py", line 143, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1054, "Unknown column 'transactions.manual_price' in 'field list'")
+[SQL: SELECT transactions.id AS transactions_id, transactions.user_id AS transactions_user_id, transactions.crypto_id AS transactions_crypto_id, transactions.investment_amount AS transactions_investment_amount, transactions.price_at_time AS transactions_price_at_time, transactions.units AS transactions_units, transactions.transaction_type AS transactions_transaction_type, transactions.timestamp AS transactions_timestamp, transactions.manual_price AS transactions_manual_price, users_1.id AS users_1_id, users_1.username AS users_1_username, users_1.email AS users_1_email, users_1.password_hash AS users_1_password_hash, users_1.is_admin AS users_1_is_admin, users_1.cash_balance AS users_1_cash_balance, cryptocurrencies_1.id AS cryptocurrencies_1_id, cryptocurrencies_1.symbol AS cryptocurrencies_1_symbol, cryptocurrencies_1.name AS cryptocurrencies_1_name, cryptocurrencies_1.current_price AS cryptocurrencies_1_current_price, cryptocurrencies_1.price_24h_ago AS cryptocurrencies_1_price_24h_ago, cryptocurrencies_1.price_change_24h AS cryptocurrencies_1_price_change_24h, cryptocurrencies_1.price_change_percentage_24h AS cryptocurrencies_1_price_change_percentage_24h, cryptocurrencies_1.last_updated AS cryptocurrencies_1_last_updated 
+FROM transactions LEFT OUTER JOIN users AS users_1 ON users_1.id = transactions.user_id LEFT OUTER JOIN cryptocurrencies AS cryptocurrencies_1 ON cryptocurrencies_1.id = transactions.crypto_id ORDER BY transactions.timestamp DESC]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)

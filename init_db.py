@@ -1,4 +1,4 @@
-from app import app, db, User, init_cryptocurrencies
+from app import app, db, User, init_cryptocurrencies, init_stocks
 from werkzeug.security import generate_password_hash
 
 def init_db():
@@ -11,6 +11,9 @@ def init_db():
         
         # Initialize cryptocurrencies
         init_cryptocurrencies()
+        
+        # Initialize stocks
+        init_stocks()
         
         # Check if admin user already exists
         admin = User.query.filter_by(username='admin').first()

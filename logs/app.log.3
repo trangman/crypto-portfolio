@@ -1,110 +1,81 @@
-2025-02-12 09:41:14,123 ERROR: Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application. [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:231]
-Traceback (most recent call last):
-  File "C:\Users\msphu\OneDrive\dev\fin2025\app.py", line 354, in dashboard
-    return render_template('dashboard.html', transactions=transactions, portfolio=portfolio)
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\flask\templating.py", line 149, in render_template
-    template = app.jinja_env.get_or_select_template(template_name_or_list)
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\jinja2\environment.py", line 1087, in get_or_select_template
-    return self.get_template(template_name_or_list, parent, globals)
-           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\jinja2\environment.py", line 1016, in get_template
-    return self._load_template(name, globals)
-           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\jinja2\environment.py", line 975, in _load_template
-    template = self.loader.load(self, name, self.make_globals(globals))
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\jinja2\loaders.py", line 138, in load
-    code = environment.compile(source, name, filename)
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\jinja2\environment.py", line 771, in compile
-    self.handle_exception(source=source_hint)
-    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
-    raise rewrite_traceback_stack(source=source)
-  File "C:\Users\msphu\OneDrive\dev\fin2025\templates\dashboard.html", line 39, in template
-    <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.10f"|format(holding.total_units)|rstrip('0')|rstrip('.') }}</td>
-    
-jinja2.exceptions.TemplateAssertionError: No filter named 'rstrip'.
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\flask\app.py", line 1463, in wsgi_app
-    response = self.full_dispatch_request()
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\flask\app.py", line 872, in full_dispatch_request
-    rv = self.handle_user_exception(e)
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\flask\app.py", line 870, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\flask\app.py", line 855, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
-    return current_app.ensure_sync(func)(*args, **kwargs)
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
-  File "C:\Users\msphu\OneDrive\dev\fin2025\app.py", line 359, in dashboard
-    return redirect(url_for('error_handler'))
-                    ~~~~~~~^^^^^^^^^^^^^^^^^
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\flask\helpers.py", line 220, in url_for
-    return current_app.url_for(
-           ~~~~~~~~~~~~~~~~~~~^
-        endpoint,
-        ^^^^^^^^^
-    ...<4 lines>...
-        **values,
-        ^^^^^^^^^
-    )
-    ^
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\flask\app.py", line 1074, in url_for
-    return self.handle_url_build_error(error, endpoint, values)
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\flask\app.py", line 1063, in url_for
-    rv = url_adapter.build(  # type: ignore[union-attr]
-        endpoint,
-    ...<3 lines>...
-        force_external=_external,
-    )
-  File "C:\Users\msphu\OneDrive\dev\fin2025\venv\Lib\site-packages\werkzeug\routing\map.py", line 919, in build
-    raise BuildError(endpoint, values, method, self)
-werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'error_handler'. Did you mean 'cryptocurrency_delete' instead?
-2025-02-12 09:42:29,914 INFO: Application startup [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:76]
-2025-02-12 09:42:29,914 INFO: SITE_URL: http://localhost:8000 [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:79]
-2025-02-12 09:42:29,914 INFO: Database URL: mysql://root:@localhost/crypto_portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:80]
-2025-02-12 09:46:19,279 INFO: Application startup [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:76]
-2025-02-12 09:46:19,280 INFO: SITE_URL: http://localhost:8000 [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:79]
-2025-02-12 09:46:19,280 INFO: Database URL: mysql://root:@localhost/crypto_portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:80]
-2025-02-12 09:46:29,973 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:292]
-2025-02-12 09:46:29,973 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:296]
-2025-02-12 09:46:29,978 INFO: Admin dashboard: Found 1 total transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:302]
-2025-02-12 09:46:29,979 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:306]
-2025-02-12 09:46:35,337 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:292]
-2025-02-12 09:46:35,338 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:296]
-2025-02-12 09:46:35,339 INFO: Admin dashboard: Found 1 total transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:302]
-2025-02-12 09:46:35,339 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:306]
-2025-02-12 09:46:37,098 INFO: Fetching users for admin page [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:379]
-2025-02-12 09:46:37,100 INFO: Successfully fetched 2 users [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:381]
-2025-02-12 09:46:37,101 INFO: Direct SQL query shows 1 transactions in database [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:387]
-2025-02-12 09:46:37,102 INFO: Fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:390]
-2025-02-12 09:46:37,103 INFO: Successfully fetched 1 transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:395]
-2025-02-12 09:46:37,103 INFO: Transaction details: [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:399]
-2025-02-12 09:46:37,103 INFO: Transaction: ID=1, User=Elon Musk, Type=buy, Crypto=BTC, Amount=5000.00, Units=0.0511, Timestamp=2025-02-05 03:23:42 [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:402]
-2025-02-12 09:50:32,258 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:292]
-2025-02-12 09:50:32,258 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:296]
-2025-02-12 09:50:32,260 INFO: Admin dashboard: Found 1 total transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:302]
-2025-02-12 09:50:32,260 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:306]
-2025-02-12 09:50:39,461 INFO: Fetching users for admin page [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:379]
-2025-02-12 09:50:39,461 INFO: Successfully fetched 2 users [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:381]
-2025-02-12 09:50:39,463 INFO: Direct SQL query shows 1 transactions in database [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:387]
-2025-02-12 09:50:39,463 INFO: Fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:390]
-2025-02-12 09:50:39,464 INFO: Successfully fetched 1 transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:395]
-2025-02-12 09:50:39,465 INFO: Transaction details: [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:399]
-2025-02-12 09:50:39,465 INFO: Transaction: ID=1, User=Elon Musk, Type=buy, Crypto=BTC, Amount=5000.00, Units=0.0511, Timestamp=2025-02-05 03:23:42 [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:402]
-2025-02-12 09:51:11,050 INFO: User accessing dashboard: Elon Musk (Admin: False) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:292]
-2025-02-12 09:51:11,050 INFO: Regular user detected - fetching user transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:308]
-2025-02-12 09:51:11,052 INFO: User dashboard: Found 1 transactions for user Elon Musk [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:313]
-2025-02-12 09:51:11,054 INFO: Updating price for BTC (bitcoin) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:126]
-2025-02-12 09:51:11,793 INFO: Updated BTC price to $95776 (24h change: -2.12%) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:155]
-2025-02-12 09:53:57,896 INFO: User accessing dashboard: Elon Musk (Admin: False) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:292]
-2025-02-12 09:53:57,896 INFO: Regular user detected - fetching user transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:308]
-2025-02-12 09:53:57,898 INFO: User dashboard: Found 1 transactions for user Elon Musk [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:313]
-2025-02-12 09:53:57,899 INFO: Updating price for BTC (bitcoin) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:126]
-2025-02-12 09:54:29,429 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:292]
-2025-02-12 09:54:29,430 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:296]
-2025-02-12 09:54:29,431 INFO: Admin dashboard: Found 1 total transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:302]
+2025-02-25 10:04:25,202 INFO: Checking cryptocurrencies... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:1434]
+2025-02-25 10:04:25,229 INFO: Cryptocurrency initialization complete [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:1436]
+2025-02-25 10:04:25,230 INFO: Checking stocks... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:1439]
+2025-02-25 10:04:25,236 INFO: Stock initialization complete [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:1441]
+2025-02-25 10:04:51,213 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:430]
+2025-02-25 10:04:51,213 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:434]
+2025-02-25 10:04:51,222 INFO: Admin dashboard: Found 2 crypto transactions and 1 stock transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:444]
+2025-02-25 10:04:51,223 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:449]
+2025-02-25 10:04:57,382 INFO: Updating price for BTC (bitcoin) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:04:58,150 INFO: Updated BTC price to $92484 (24h change: -3.39%) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:177]
+2025-02-25 10:04:58,152 INFO: Updating price for ETH (ethereum) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:04:58,836 INFO: Updated ETH price to $2512.85 (24h change: -9.22%) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:177]
+2025-02-25 10:04:58,838 INFO: Updating price for BNB (binancecoin) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:04:59,547 INFO: Updated BNB price to $614.89 (24h change: -5.26%) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:177]
+2025-02-25 10:04:59,549 INFO: Updating price for SOL (solana) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:05:00,251 INFO: Updated SOL price to $141.73 (24h change: -12.82%) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:177]
+2025-02-25 10:05:00,253 INFO: Updating price for XRP (ripple) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:05:00,671 INFO: Updating price for ADA (cardano) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:05:01,322 INFO: Updated ADA price to $0.689854 (24h change: -8.53%) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:177]
+2025-02-25 10:05:01,323 INFO: Updating price for DOGE (dogecoin) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:05:01,736 WARNING: Rate limited when updating DOGE. Using last known price. [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:145]
+2025-02-25 10:05:01,736 INFO: Using last known price for DOGE: $0.2127120000 [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:148]
+2025-02-25 10:05:01,738 INFO: Updating price for AVAX (avalanche-2) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:05:02,152 WARNING: Rate limited when updating AVAX. Using last known price. [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:145]
+2025-02-25 10:05:02,152 INFO: Using last known price for AVAX: $26.2600000000 [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:148]
+2025-02-25 10:05:02,154 INFO: Updating price for DOT (polkadot) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:05:02,557 WARNING: Rate limited when updating DOT. Using last known price. [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:145]
+2025-02-25 10:05:02,557 INFO: Using last known price for DOT: $4.4400000000 [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:148]
+2025-02-25 10:05:02,558 INFO: Updating price for MATIC (matic-network) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:05:03,228 INFO: Updated MATIC price to $0.270093 (24h change: -6.90%) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:177]
+2025-02-25 10:05:03,229 INFO: Transaction form: Found 1 clients and 10 cryptocurrencies [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:706]
+2025-02-25 10:05:08,171 INFO: Updating price for ETH (ethereum) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:05:08,661 WARNING: Rate limited when updating ETH. Using last known price. [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:145]
+2025-02-25 10:05:08,662 INFO: Using last known price for ETH: $2512.8500000000 [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:148]
+2025-02-25 10:08:34,515 INFO: Application startup [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:85]
+2025-02-25 10:08:34,515 INFO: SITE_URL: https://barbicancapitalmanagement.com [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:88]
+2025-02-25 10:08:34,515 INFO: Database URL: mysql://root:@localhost/crypto_portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:89]
+2025-02-25 10:08:34,525 INFO: Testing database connection... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:1423]
+2025-02-25 10:08:34,533 INFO: Database connection successful [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:1426]
+2025-02-25 10:08:34,533 INFO: Checking database tables... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:1429]
+2025-02-25 10:08:34,539 INFO: Database tables verified [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:1431]
+2025-02-25 10:08:34,539 INFO: Checking cryptocurrencies... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:1434]
+2025-02-25 10:08:34,555 INFO: Cryptocurrency initialization complete [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:1436]
+2025-02-25 10:08:34,555 INFO: Checking stocks... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:1439]
+2025-02-25 10:08:34,562 INFO: Stock initialization complete [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:1441]
+2025-02-25 10:09:01,655 INFO: User accessing dashboard: admin (Admin: True) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:430]
+2025-02-25 10:09:01,656 INFO: Admin user detected - fetching all transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:434]
+2025-02-25 10:09:01,664 INFO: Admin dashboard: Found 2 crypto transactions and 1 stock transactions [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:444]
+2025-02-25 10:09:01,664 INFO: Admin user - setting empty portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:449]
+2025-02-25 10:09:04,915 INFO: Updating price for BTC (bitcoin) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:09:06,034 INFO: Updated BTC price to $92341 (24h change: -3.60%) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:177]
+2025-02-25 10:09:06,036 INFO: Updating price for ETH (ethereum) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:09:06,670 INFO: Updated ETH price to $2508.47 (24h change: -9.27%) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:177]
+2025-02-25 10:09:06,671 INFO: Updating price for BNB (binancecoin) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:09:07,315 INFO: Updated BNB price to $613.86 (24h change: -5.46%) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:177]
+2025-02-25 10:09:07,316 INFO: Updating price for SOL (solana) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:09:08,401 INFO: Updated SOL price to $141.12 (24h change: -13.21%) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:177]
+2025-02-25 10:09:08,403 INFO: Updating price for XRP (ripple) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:09:08,884 INFO: Updating price for ADA (cardano) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:09:09,285 WARNING: Rate limited when updating ADA. Using last known price. [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:145]
+2025-02-25 10:09:09,285 INFO: Using last known price for ADA: $0.6898540000 [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:148]
+2025-02-25 10:09:09,287 INFO: Updating price for DOGE (dogecoin) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:09:09,682 WARNING: Rate limited when updating DOGE. Using last known price. [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:145]
+2025-02-25 10:09:09,683 INFO: Using last known price for DOGE: $0.2127120000 [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:148]
+2025-02-25 10:09:09,685 INFO: Updating price for AVAX (avalanche-2) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:09:10,089 WARNING: Rate limited when updating AVAX. Using last known price. [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:145]
+2025-02-25 10:09:10,089 INFO: Using last known price for AVAX: $26.2600000000 [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:148]
+2025-02-25 10:09:10,091 INFO: Updating price for DOT (polkadot) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:09:10,488 WARNING: Rate limited when updating DOT. Using last known price. [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:145]
+2025-02-25 10:09:10,488 INFO: Using last known price for DOT: $4.4400000000 [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:148]
+2025-02-25 10:09:10,490 INFO: Updating price for MATIC (matic-network) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:09:11,140 INFO: Updated MATIC price to $0.269371 (24h change: -7.26%) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:177]
+2025-02-25 10:09:11,142 INFO: Transaction form: Found 1 clients and 10 cryptocurrencies [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:706]
+2025-02-25 10:09:16,600 INFO: Updating price for ETH (ethereum) [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:136]
+2025-02-25 10:09:17,078 WARNING: Rate limited when updating ETH. Using last known price. [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:145]
+2025-02-25 10:09:17,079 INFO: Using last known price for ETH: $2508.4700000000 [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:148]
+2025-02-25 10:12:10,995 INFO: Application startup [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:85]
+2025-02-25 10:12:10,996 INFO: SITE_URL: https://barbicancapitalmanagement.com [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:88]
+2025-02-25 10:12:10,996 INFO: Database URL: mysql://root:@localhost/crypto_portfolio [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:89]
+2025-02-25 10:12:11,006 INFO: Testing database connection... [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:1423]
+2025-02-25 10:12:11,014 INFO: Database connection successful [in C:\Users\msphu\OneDrive\dev\fin2025\app.py:1426]
